@@ -846,12 +846,48 @@
         };
 
         initializeScrapeSettings();
+        initializeScrapeButton();
 
         document.addEventListener('DOMContentLoaded', async function() {
             initializeFromURL();
             initializeEventListeners();
             await loadProducts();
         });
+
+        async function initializeScrapeButton() {
+            let requestResp = await fetch(`${API_BASE}/scrape/status`, { method: 'GET' });
+            let data = await requestResp.json();
+            if(data.status == 'idle')
+                return;
+            
+            const scrapeBtn = document.querySelector('#scrape-form button[type="submit"]');
+            scrapeBtn.disabled = true;
+            scrapeBtn.classList.add('btn-danger'); // adaugă stil vizibil pentru dezactivat
+            scrapeBtn.classList.remove('btn-primary');
+
+            scrapingInProgress = true;
+            let finished = false;
+            let nr_products = ''
+            while (!finished) {
+                await new Promise(res => setTimeout(res, 2000));
+                let statusResp = await fetch(`${API_BASE}/scrape/status`, { method: 'GET' });
+                let statusData = await statusResp.json();
+                if (statusData.status === 'done') {
+                    finished = true;
+                    nr_products = statusData.len_products;
+                }
+            }
+            scrapingInProgress = false;
+            showAlert('success', 'Scraping finalizat! Au fost afectate ' + nr_products + ' produse');
+            showLoading();
+            loadProducts();
+            hideLoading();
+            scrapeBtn.disabled = false;
+            scrapeBtn.classList.remove('btn-danger');
+            scrapeBtn.classList.add('btn-primary');
+            const scrapeInput = document.getElementById('scrape-query');
+            scrapeInput.value = ""; // elimină textul din input
+        }
 
         async function initializeScrapeSettings() {
             const formData = new FormData();
@@ -1010,7 +1046,7 @@
                 data.items.forEach((p, idx) => {
                     tbody.innerHTML += `<tr>
                         <td><input type="checkbox" class="checkbox product-checkbox" value="${p.id}" onchange="toggleProductSelection(${p.id})"></td>
-                        <td>${p.id}</td>
+                        <td>${idx + 1 + (data.page-1)*data.per_page}</td>
                         <td><span class="site-badge">${p.site_name}</span></td>
                         <td><a href="/product/${p.id}" class="product-link">${p.title}</a></td>
                         <td class="price">${p.currency || ''} ${p.last_price !== null ? p.last_price : '-'}</td>
@@ -1648,25 +1684,39 @@
         });
 
         // Exemplu config pentru site-uri (poate fi încărcat din backend)
-        let sitesConfig = [
-            {
-              "name": "",
-              "url": "",
-              "url_searchTemplate": "",
-              "selectors": {
-                "product": "",
-                "title": "",
-                "link": "",
-                "price": "",
-                "currency": "",
-                "rating": "",
-                "id": "",
-                "image_link": "",
-                "remove_items_with": "",
-                "end_of_pages": ""
-              }
+        let sitesConfig = [];
+        initializeSitesConfig();
+
+        async function initializeSitesConfig() {
+            let requestResp = await fetch(`${API_BASE}/get_site_number`, { method: 'GET' });
+            let data = await requestResp.json();
+            const nr_sites = data.nr_sites;
+
+            for(let i = 0; i < nr_sites; i++) {
+                requestResp = await fetch(`${API_BASE}/get_site_settings?index=${i}`, { method: 'GET' });
+                data = await requestResp.json();
+
+                let newSite = {
+                    name: data.name,
+                    url: data.url,
+                    url_searchTemplate: data.url_searchTemplate,
+                    selectors: {
+                        product: data.product,
+                        title: data.title,
+                        link: data.link,
+                        price: data.price,
+                        currency: data.currency,
+                        rating: data.rating,
+                        id: data.id,
+                        image_link: data.image_link,
+                        remove_items_with: data.remove_items_with,
+                        end_of_pages: data.end_of_pages
+                    }
+                };
+
+                sitesConfig.push(newSite);
             }
-        ];
+        }
 
         // Deschide panelul de configurare site
         document.getElementById('site-config-btn').onclick = function() {
@@ -1698,18 +1748,17 @@
             siteListDiv.innerHTML = '';
             let selectedIdx = window._selectedSiteIdx === null ? null : window._selectedSiteIdx;
 
-            let requestResp = await fetch(`${API_BASE}/get_site_number`, { method: 'GET' });
-            let data = await requestResp.json();
+            /* let requestResp = await fetch(`${API_BASE}/get_site_number`, { method: 'GET' });
+            let data = await requestResp.json(); */
 
-            for (let idx = 0; idx < data.nr_sites; idx++) {
-                const site = sitesConfig[idx];
+            sitesConfig.forEach((site, idx) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'btn btn-secondary';
                 btn.style = 'margin-bottom:0.5rem; margin-right:0.5rem;';
-                let requestResp_Site = await fetch(`${API_BASE}/get_site_settings?index=${idx}`, { method: 'GET' });
-                let data_Site = await requestResp_Site.json();
-                btn.textContent = data_Site.name;
+                /* let requestResp_Site = await fetch(`${API_BASE}/get_site_settings?index=${idx}`, { method: 'GET' });
+                let data_Site = await requestResp_Site.json(); */
+                btn.textContent = site.name;
                 btn.onclick = async function() {
                     window._selectedSiteIdx = idx;
                     await renderSiteList();
@@ -1731,7 +1780,7 @@
                     btn.style.transform = '';
                 }
                 siteListDiv.appendChild(btn);
-            }
+            });
 
             // Buton plus pentru adăugare site nou
             const addBtn = document.createElement('button');
@@ -1739,7 +1788,7 @@
             addBtn.className = 'btn btn-primary';
             addBtn.style = 'margin-bottom:0.5rem; margin-right:0.5rem; display:flex; align-items:center; gap:0.3rem;';
             addBtn.innerHTML = '<i class="fas fa-plus"></i> Adaugă site';
-            addBtn.onclick = function() {
+            addBtn.onclick = async function() {
                 // Găsește toate numele de tip "Nume nou site" sau "Nume nou site (nr)"
                 const baseName = 'Nume nou site';
                 const usedNumbers = new Set();
@@ -1772,14 +1821,37 @@
                         currency: '',
                         rating: '',
                         id: '',
+                        image_link: '',
                         remove_items_with: '',
                         end_of_pages: ''
                     }
                 };
+                const formData = new FormData();
+                /* formData.append("index", sitesConfig.length);
+                formData.append("name", newSite.name);
+                formData.append("url", newSite.url);
+                formData.append("url_searchTemplate", newSite.url_searchTemplate);
+                formData.append("product", newSite.selectors.product);
+                formData.append("title", newSite.selectors.title);
+                formData.append("link", newSite.selectors.link);
+                formData.append("price", newSite.selectors.price);
+                formData.append("currency", newSite.selectors.currency);
+                formData.append("rating", newSite.selectors.rating);
+                formData.append("id", newSite.selectors.id);
+                formData.append("image_link", newSite.selectors.image_link);
+                formData.append("remove_items_with", newSite.selectors.remove_items_with);
+                formData.append("end_of_pages", newSite.selectors.end_of_pages); */
+
+                await fetch(`${API_BASE}/set_site_settings?index=${sitesConfig.length}&name=${newName}`, {
+                method: 'POST',
+                body: formData
+                });
+
+                
                 sitesConfig.push(newSite);
-                window._selectedSiteIdx = 0;
+                window._selectedSiteIdx = sitesConfig.length - 1;
                 renderSiteList();
-                renderSiteProperties(0);
+                renderSiteProperties(sitesConfig.length - 1);
             };
             siteListDiv.appendChild(addBtn);
 
@@ -1795,20 +1867,7 @@
         // Render inputuri pentru proprietăți site
         async function renderSiteProperties(siteIdx) {
             window._selectedSiteIdx = siteIdx;
-            let site = sitesConfig[0];
-
-            let requestResp = await fetch(`${API_BASE}/get_site_settings?index=${siteIdx}`, { method: 'GET' });
-            let data = await requestResp.json();
-            site.selectors.product = data.product;
-            site.selectors.title = data.title;
-            site.selectors.link = data.link;
-            site.selectors.price = data.price;
-            site.selectors.currency = data.currency;
-            site.selectors.rating = data.rating;
-            site.selectors.id = data.id;
-            site.selectors.image_link = data.image_link;
-            site.selectors.remove_items_with = data.remove_items_with;
-            site.selectors.end_of_pages = data.end_of_pages;
+            let site = sitesConfig[siteIdx];
 
             const formDiv = document.getElementById('site-properties');
             const form = document.getElementById('site-properties-form');
@@ -1821,11 +1880,11 @@
                     Nume site:
                     <span id="site-name-error" style="color:#ef4444;font-size:1em;font-weight:500;display:none;margin-left:0.5em;"></span>
                 </label>
-                <input type="text" name="site_name" id="site-name-input" class="form-input" value="${data.name}" style="width:100%;margin-bottom:1rem;">
+                <input type="text" name="site_name" id="site-name-input" class="form-input" value="${site.name}" style="width:100%;margin-bottom:1rem;">
                 <label>URL:</label>
-                <input type="text" name="url" class="form-input" value="${data.url}" style="width:100%;margin-bottom:1rem;">
+                <input type="text" name="url" class="form-input" value="${site.url}" style="width:100%;margin-bottom:1rem;">
                 <label>URL Search Template:</label>
-                <input type="text" name="url_searchTemplate" class="form-input" value="${data.url_searchTemplate}" style="width:100%;margin-bottom:1rem;">
+                <input type="text" name="url_searchTemplate" class="form-input" value="${site.url_searchTemplate}" style="width:100%;margin-bottom:1rem;">
                 ${Object.entries(site.selectors).map(([key, val]) => `
                     <label>${key}:</label>
                     <input type="text" name="selector_${key}" class="form-input" value="${val}" style="width:100%;margin-bottom:0.7rem;">
@@ -1835,7 +1894,7 @@
             const deleteBtn = document.getElementById('delete-site-btn');
             deleteBtn.style.display = 'flex';
 
-            document.getElementById('site-config-save').onclick = function() {
+            document.getElementById('site-config-save').onclick = async function() {
                 const nameInput = document.getElementById('site-name-input');
                 const errorSpan = document.getElementById('site-name-error');
                 const newName = nameInput.value.trim();
@@ -1900,6 +1959,25 @@
                 Object.keys(site.selectors).forEach(key => {
                     site.selectors[key] = form[`selector_${key}`].value;
                 });
+                const formData = new FormData();
+
+                await fetch(`${API_BASE}/set_site_settings` +
+                            `?index=${siteIdx}` +
+                            `&name=${site.name}` +
+                            `&url=${site.url}` + 
+                            `&url_searchTemplate=${site.url_searchTemplate}` +
+                            `&product=${site.selectors.product}` +
+                            `&title=${site.selectors.title}` +
+                            `&link=${site.selectors.link}` +
+                            `&price=${site.selectors.price}` +
+                            `&currency=${site.selectors.currency}` +
+                            `&rating=${site.selectors.rating}` +
+                            `&id=${site.selectors.id}` +
+                            `&image_link=${site.selectors.image_link}` +
+                            `&remove_items_with=${site.selectors.remove_items_with}` +
+                            `&end_of_pages=${site.selectors.end_of_pages}`,
+                            { method: 'POST', body: formData });
+
                 document.getElementById('site-config-modal').style.display = 'none';
                 deleteBtn.style.display = 'none';
                 window._selectedSiteIdx = null;
@@ -1915,7 +1993,9 @@
                 document.getElementById('delete-site-modal').style.display = 'block';
 
                 // Confirmare
-                document.getElementById('delete-site-confirm').onclick = function() {
+                document.getElementById('delete-site-confirm').onclick = async function() {
+                    await fetch(`${API_BASE}/delete_site?index=${siteIdx}`, {method: "POST"})
+
                     sitesConfig.splice(siteIdx, 1);
                     renderSiteList();
                     document.getElementById('site-properties').style.display = 'none';

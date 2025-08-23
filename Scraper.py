@@ -78,7 +78,7 @@ class Scraper:
 
         jumpSite = dict()
         for site in self.config["sites"]:
-            jumpSite[site["name"]] = False
+            jumpSite[site["name"]] = (site["url"] == "")
 
         produse_nr = 0  
         
@@ -92,7 +92,6 @@ class Scraper:
             ])
 
             pgn = 1
-            produse = []
             matcher = build_generic_matcher(query)
             outOfSites = False
 

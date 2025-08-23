@@ -8,7 +8,7 @@
         "product": "div.puis-card-container.s-card-container.s-overflow-hidden",
         "title": "h2.a-size-medium.a-spacing-none.a-color-base.a-text-normal",
         "link": "a.a-link-normal.s-line-clamp-2.s-link-style.a-text-normal",
-        "price": "span.a-price-whole",
+        "price": "span.a-price-whole", 
         "currency": "",
         "rating": "None",
         "id": "",
@@ -51,23 +51,6 @@
         "image_link": "div.Product-photoWrapper img",
         "remove_items_with": "",
         "end_of_pages": ".my-4"
-      }
-    },
-    {
-      "name": "Nume nou site",
-      "url": "",
-      "url_searchTemplate": "asdf",
-      "selectors": {
-        "product": "",
-        "title": "",
-        "link": "",
-        "price": "",
-        "currency": "",
-        "rating": "",
-        "id": "",
-        "image_link": "",
-        "remove_items_with": "asdf",
-        "end_of_pages": ""
       }
     }
   ],

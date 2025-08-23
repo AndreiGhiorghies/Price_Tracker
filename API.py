@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 import aiosqlite
 import asyncio
-from Scraper import Filters, Scraper
+import json
 
 from Database import database_initialized, init_db
 from fastapi.responses import JSONResponse
@@ -23,9 +23,8 @@ APP.add_middleware(
 
 # ---------- util / startup ----------
 async def get_db():
-    import Database
-    if not Database.database_initialized:
-        await Database.init_db(DB_PATH)
+    if not database_initialized:
+        await init_db(DB_PATH)
     
     db = await aiosqlite.connect(DB_PATH)
     # return rows as tuples; we'll map manually
@@ -37,7 +36,7 @@ async def get_db():
 @APP.on_event("startup")
 async def on_startup():
     if not database_initialized:
-        await init_db()
+        await init_db(DB_PATH)
     # asigură-te că DB-ul există (poți apela init_db din modulul tău)
     # dacă ai funcția init_db importabilă, o poți apela aici.
     # from db import init_db
@@ -211,7 +210,6 @@ def scrape_status():
     elif scrape_process.poll() is None:
         return {"status": "in_progress"}
     else:
-        import json
         config_path = "config.json"
         try:
             with open(config_path, "r", encoding="utf-8") as f:
@@ -268,7 +266,6 @@ async def change_config(
     min_rating: Optional[str] = Query(None, description="Minimum rating of the products"),
     min_rating_number: Optional[str] = Query(None, description="Minimum number of ratings of the products"),
 ):
-    import json
     config_path = "config.json"
     # Citește config-ul existent
     try:
@@ -295,7 +292,6 @@ async def change_config(
 
 @APP.post("/get_config")
 async def get_config():
-    import json
     config_path = "config.json"
     # Citește config-ul existent
     try:
@@ -311,7 +307,7 @@ async def get_config():
 
 @APP.get("/get_site_settings")
 async def get_site_settings(index: Optional[str] = Query(None, description="Indexul site-ului")):
-    import json
+    
     config_path = "config.json"
     idx = int(index if index is not None else "0")
     try:
@@ -353,7 +349,7 @@ async def set_site_settings(
     remove_items_with: Optional[str] = Query(None, description="Ignora produsul"),
     end_of_pages: Optional[str] = Query(None, description="Sfarsitul paginilor cu produse"),
 ):
-    import json
+    
     config_path = "config.json"
     idx = int(index if index is not None else "0")
     try:
@@ -362,25 +358,45 @@ async def set_site_settings(
     except Exception:
         config = {}
 
+    if config and idx >= len(config["sites"]):
+        config["sites"].append({
+            "name": "",
+            "url": "",
+            "url_searchTemplate": "",
+            "selectors": {
+                "product": "",
+                "title": "",
+                "link": "",
+                "price": "",
+                "currency": "",
+                "rating": "",
+                "id": "",
+                "image_link": "",
+                "remove_items_with": "",
+                "end_of_pages": ""
+            }
+        })
+
     config["sites"][idx]["name"] = name
-    config["sites"][idx]["url"] = url
-    config["sites"][idx]["url_searchTemplate"] = url_searchTemplate
-    config["sites"][idx]["selectors"]["product"] = product
-    config["sites"][idx]["selectors"]["title"] = title
-    config["sites"][idx]["selectors"]["link"] = link
-    config["sites"][idx]["selectors"]["price"] = price
-    config["sites"][idx]["selectors"]["currency"] = currency
-    config["sites"][idx]["selectors"]["id"] = id
-    config["sites"][idx]["selectors"]["image_link"] = image_link
-    config["sites"][idx]["selectors"]["remove_items_with"] = remove_items_with
-    config["sites"][idx]["selectors"]["end_of_pages"] = end_of_pages
+    config["sites"][idx]["url"] = url if url else ""
+    config["sites"][idx]["url_searchTemplate"] = url_searchTemplate if url_searchTemplate else ""
+    config["sites"][idx]["selectors"]["product"] = product if product else ""
+    config["sites"][idx]["selectors"]["title"] = title if title else ""
+    config["sites"][idx]["selectors"]["link"] = link if link else ""
+    config["sites"][idx]["selectors"]["price"] = price if price else ""
+    config["sites"][idx]["selectors"]["currency"] = currency if currency else ""
+    config["sites"][idx]["selectors"]["rating"] = rating if rating else ""
+    config["sites"][idx]["selectors"]["id"] = id if id else ""
+    config["sites"][idx]["selectors"]["image_link"] = image_link if image_link else ""
+    config["sites"][idx]["selectors"]["remove_items_with"] = remove_items_with if remove_items_with else ""
+    config["sites"][idx]["selectors"]["end_of_pages"] = end_of_pages if end_of_pages else ""
 
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
 @APP.get("/get_site_number")
 async def get_site_number():
-    import json
+    
     config_path = "config.json"
     try:
         with open(config_path, "r", encoding="utf-8") as f:
@@ -389,5 +405,31 @@ async def get_site_number():
         config = {}
 
     return {"nr_sites": len(config["sites"])}
+
+@APP.post("/delete_site")
+async def delete_site(index: Optional[str] = Query(None, description="Indexul site-ului care trebuie sters")):
+    try:
+        if index:
+            idx = int(index)
+        else:
+            return
+    except Exception:
+        return
+    
+    
+    config_path = "config.json"
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    except Exception:
+        return
+
+    if idx < 0 or idx >= len(config["sites"]):
+        return
+
+    del config["sites"][idx]
+
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
 
 # python -m uvicorn API:APP --reload --host 0.0.0.0 --port 8000

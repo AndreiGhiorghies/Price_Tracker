@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Tracker — Produse</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #0f172a;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            /* backdrop-filter: blur(10px); */
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo h1 {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .scrape-form {
+            display: flex;
+            gap: 0.5rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .scrape-input {
+            border: none;
+            outline: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            width: 200px;
+            background: transparent;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-danger:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Filters Section */
+        .filters {
+            background: rgba(255, 255, 255, 0.9);
+            /* backdrop-filter: blur(10px); */
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 0.5rem; /* redus spațiul */
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr 1fr;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+
+        .form-input, .form-select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Bulk Actions */
+        .bulk-actions {
+            margin-bottom: 0; /* implicit fără spațiu */
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .bulk-actions.active {
+            opacity: 1;
+            transform: translateY(0);
+            margin-bottom: 1rem; /* spațiu când e activ */
+            margin-top: 1rem;
+
+        }
+
+        /* Table Card */
+        .table-card {
+            background: rgba(255, 255, 255, 0.95);
+            /* backdrop-filter: blur(10px); */
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        }
+
+        .table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+            transform: scale(1.001);
+        }
+
+        .product-link {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .product-link:hover {
+            color: var(--primary);
+        }
+
+        .site-badge {
+            background: var(--gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .price {
+            font-weight: 700;
+            color: var(--success);
+            font-size: 1.1rem;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stars {
+            color: var(--warning);
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Footer */
+        .table-footer {
+            padding: 1.5rem;
+            background: rgba(248, 250, 252, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--secondary);
+            transition: all 0.2s ease;
+        }
+
+        .page-btn:hover:not(.disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .page-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            background: var(--gradient);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .table-card {
+                overflow-x: auto;
+            }
+
+            .table {
+                min-width: 600px;
+            }
+
+            .table-footer {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filters {
+                margin-bottom: 0.5rem;
+            }
+
+            .bulk-actions.active {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            /* backdrop-filter: blur(10px); */
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Success/Error Messages */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .alert.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>Price Tracker</h1>
+                </div>
+                <div class="header-actions">
+                    <form class="scrape-form" id="scrape-form">
+                        <input type="text" class="scrape-input" placeholder="Query scrape..." id="scrape-query" name="query">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-spider"></i>
+                            Start scrape
+                        </button>
+                    </form>
+                    <button class="btn btn-success" onclick="exportCSV()">
+                        <i class="fas fa-download"></i>
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div id="alert-success" class="alert success">
+            <i class="fas fa-check-circle"></i>
+            <span id="success-message"></span>
+        </div>
+        <div id="alert-error" class="alert error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="error-message"></span>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <form class="filter-row" id="filter-form">
+                <div class="form-group">
+                    <label class="form-label">Caută titlu</label>
+                    <input type="text" class="form-input" id="filter-title" name="q" placeholder="Caută în titluri..." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Site</label>
+                    <input type="text" class="form-input" id="filter-site" name="site" placeholder="ex: emag, altex" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Produse pe pagină</label>
+                    <select class="form-select" id="per-page" name="per_page">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" id="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Filtrează
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" id="bulk-actions">
+            <form id="bulk-delete-form" action="{{ url_for('bulk_delete_products') }}" method="post">
+                <button type="submit" class="btn btn-danger" disabled id="bulk-delete-btn">
+                    <i class="fas fa-trash"></i>
+                    Șterge selectate (<span id="selected-count">0</span>)
+                </button>
+            </form>
+        </div>
+
+        <!-- Products Table -->
+        <div class="table-card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="checkbox" id="select-all">
+                        </th>
+                        <th>#</th>
+                        <th>Site</th>
+                        <th>Titlu</th>
+                        <th>Preț</th>
+                        <th>Rating</th>
+                        <th>Ultima actualizare</th>
+                    </tr>
+                </thead>
+                <tbody id="products-table">
+                </tbody>
+            </table>
+
+            <div class="table-footer">
+                <div>
+                    Total: <strong id="total-products">{{ total }}</strong> produse
+                </div>
+                <div class="pagination">
+                    <!-- Paginarea va fi populată dinamic cu JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Se încarcă...</div>
+    </div>
+
+    <script>
+        // ...existing code...
+        // Optimizare: încărcare asincronă produse, paginare, filtre, bulk delete, export CSV
+        let currentPage = 1;
+        let currentFilters = { q: '', site: '', per_page: 25 };
+        let selectedProducts = new Set();
+        const API_BASE = 'http://127.0.0.1:8000';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("1\n")
+            initializeFromURL();
+            initializeEventListeners();   
+            loadProducts();
+        });
+
+        function initializeEventListeners() {
+            console.log("2\n")
+            document.getElementById('scrape-form').addEventListener('submit', handleScrape);
+            document.getElementById('filter-form').addEventListener('submit', handleFilter);
+            document.getElementById('bulk-delete-form').addEventListener('submit', handleBulkDelete);
+            document.getElementById('select-all').addEventListener('change', toggleSelectAll);
+            document.getElementById('filter-title').addEventListener('input', debounce(function(e) {
+                currentFilters.q = e.target.value;
+                currentPage = 1;
+                loadProducts();
+            }, 400));
+            document.getElementById('filter-site').addEventListener('input', debounce(function(e) {
+                currentFilters.site = e.target.value;
+                currentPage = 1;
+                loadProducts();
+            }, 400));
+            document.getElementById('per-page').addEventListener('change', function(e) {
+                currentFilters.per_page = parseInt(e.target.value);
+                currentPage = 1;
+                loadProducts();
+            });
+        }
+
+        async function loadProducts() {
+            showLoading();
+            try {
+                let params = new URLSearchParams({
+                    q: currentFilters.q || '',
+                    site: currentFilters.site || '',
+                    page: currentPage,
+                    per_page: currentFilters.per_page
+                });
+                let resp = await fetch(`/products?${params.toString()}`, { headers: { 'Accept': 'application/json' } });
+                if (!resp.ok) throw new Error('Eroare la încărcarea produselor');
+                let data = await resp.json();
+                renderProducts(data);
+            } catch (error) {
+                showAlert('error', error.message);
+                document.getElementById('products-table').innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-exclamation-triangle"></i><div>Eroare la încărcarea datelor</div></td></tr>`;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderProducts(data) {
+            const tbody = document.getElementById('products-table');
+            tbody.innerHTML = '';
+            if (!data.items || data.items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-box-open"></i><div>Nu au fost găsite produse</div></td></tr>`;
+            } else {
+                data.items.forEach((p, idx) => {
+                    tbody.innerHTML += `<tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="${p.id}" onchange="toggleProductSelection(${p.id})"></td>
+                        <td>${idx + 1 + (data.page-1)*data.per_page}</td>
+                        <td><span class="site-badge">${p.site_name}</span></td>
+                        <td><a href="/product/${p.id}" class="product-link">${p.title}</a></td>
+                        <td class="price">${p.currency || ''} ${p.last_price !== null ? p.last_price : '-'}</td>
+                        <td>${p.rating !== null ? p.rating : '-'}${p.ratings_count ? ` (${p.ratings_count})` : ''}</td>
+                        <td class="text-muted">${p.last_seen_at}</td>
+                    </tr>`;
+                });
+            }
+            updateSelectAllCheckbox();
+            updateBulkActions();
+            renderPagination(data.page, data.total, data.per_page);
+            document.getElementById('total-products').textContent = data.total;
+        }
+
+        function renderPagination(page, total, per_page) {
+            console.log("5\n")
+            const pag = document.querySelector('.pagination');
+            pag.innerHTML = '';
+            const totalPages = Math.max(1, Math.ceil(total / per_page));
+            if (totalPages <= 1) return;
+            pag.innerHTML += `<button class="page-btn${page === 1 ? ' disabled' : ''}" onclick="changePage(-1)" ${page === 1 ? 'disabled' : ''}>&laquo; Prev</button>`;
+            pag.innerHTML += `<span class="page-info">${page} / ${totalPages}</span>`;
+            pag.innerHTML += `<button class="page-btn${page === totalPages ? ' disabled' : ''}" onclick="changePage(1)" ${page === totalPages ? 'disabled' : ''}>Next &raquo;</button>`;
+        }
+
+        function changePage(direction) {
+            console.log("6\n")
+            const total = parseInt(document.getElementById('total-products').textContent);
+            const totalPages = Math.max(1, Math.ceil(total / currentFilters.per_page));
+            let newPage = currentPage + direction;
+            if (newPage < 1 || newPage > totalPages) return;
+            currentPage = newPage;
+            loadProducts();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleSelectAll() {
+            console.log("7\n")
+            const selectAll = document.getElementById('select-all');
+            const productCheckboxes = document.querySelectorAll('.product-checkbox');
+            productCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const productId = parseInt(checkbox.value);
+                if (selectAll.checked) selectedProducts.add(productId);
+                else selectedProducts.delete(productId);
+            });
+            updateBulkActions();
+        }
+
+        function toggleProductSelection(productId) {
+            console.log("8\n")
+            productId = parseInt(productId);
+            if (selectedProducts.has(productId)) selectedProducts.delete(productId);
+            else selectedProducts.add(productId);
+            updateSelectAllCheckbox();
+            updateBulkActions();
+        }
+
+        function updateSelectAllCheckbox() {
+            console.log("9\n")
+            const selectAll = document.getElementById('select-all');
+            const productCheckboxes = document.querySelectorAll('.product-checkbox');
+            const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+            if (checkedBoxes.length === 0) { selectAll.checked = false; selectAll.indeterminate = false; }
+            else if (checkedBoxes.length === productCheckboxes.length) { selectAll.checked = true; selectAll.indeterminate = false; }
+            else { selectAll.checked = false; selectAll.indeterminate = true; }
+        }
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulk-actions');
+            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            const selectedCount = document.getElementById('selected-count');
+            selectedCount.textContent = selectedProducts.size;
+            bulkDeleteBtn.disabled = selectedProducts.size === 0;
+            if (selectedProducts.size > 0) bulkActions.classList.add('active');
+            else bulkActions.classList.remove('active');
+        }
+
+        function handleFilter(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            currentFilters.q = formData.get('q') || '';
+            currentFilters.site = formData.get('site') || '';
+            currentFilters.per_page = parseInt(formData.get('per_page')) || 25;
+            currentPage = 1;
+            selectedProducts.clear();
+            loadProducts();
+        }
+
+        async function handleBulkDelete(event) {
+            console.log("13\n")
+            event.preventDefault();
+            if (selectedProducts.size === 0) return;
+            const confirmed = confirm(`Sigur vrei să ștergi ${selectedProducts.size} produse selectate?`);
+            if (!confirmed) return;
+            showLoading();
+            try {
+                let formData = new FormData();
+                selectedProducts.forEach(id => formData.append('product_ids', id));
+                let resp = await fetch('/bulk_delete', { method: 'POST', body: formData });
+                if (resp.redirected) window.location.href = resp.url;
+                else {
+                    let data = await resp.json();
+                    if (data.ok) showAlert('success', 'Produse șterse!');
+                    else showAlert('error', data.error || 'Eroare la ștergere');
+                }
+            } catch (error) {
+                showAlert('error', 'Eroare la ștergerea produselor: ' + error.message);
+            } finally { hideLoading(); }
+        }
+
+        async function exportCSV() {
+            showLoading();
+            try {
+                let params = new URLSearchParams({ q: currentFilters.q || '', site: currentFilters.site || '' });
+                window.location.href = `/export.csv?${params.toString()}`;
+            } catch (error) {
+                showAlert('error', 'Eroare la exportul CSV: ' + error.message);
+            } finally { hideLoading(); }
+        }
+
+        function showLoading() { document.getElementById('loading').style.display = 'block'; }
+        function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+        function showAlert(type, message) {
+            hideLoading();
+            if (type === 'success') {
+                document.getElementById('alert-success').style.display = 'flex';
+                document.getElementById('success-message').textContent = message;
+                setTimeout(() => { document.getElementById('alert-success').style.display = 'none'; }, 3000);
+            } else {
+                document.getElementById('alert-error').style.display = 'flex';
+                document.getElementById('error-message').textContent = message;
+                setTimeout(() => { document.getElementById('alert-error').style.display = 'none'; }, 4000);
+            }
+        }
+
+        function debounce(fn, delay) {
+            console.log("15\n")
+            let timer; return function(...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), delay); };
+        }
+
+        document.addEventListener('keydown', function(e) {
+            console.log("16\n")
+            if (e.ctrlKey && e.key === 'f') document.getElementById('filter-title').focus();
+            if (e.ctrlKey && e.key === 's') document.querySelector('.scrape-input').focus();
+            if (e.ctrlKey && e.key === 'a') { document.getElementById('select-all').checked = true; toggleSelectAll(); }
+            if (e.key === 'Delete') { if (selectedProducts.size > 0) document.getElementById('bulk-delete-btn').click(); }
+        });
+
+        function updateURL() {
+            console.log("17\n")
+            const params = new URLSearchParams();
+            if (currentFilters.q) params.set('q', currentFilters.q);
+            if (currentFilters.site) params.set('site', currentFilters.site);
+            if (currentFilters.per_page !== 25) params.set('per_page', currentFilters.per_page);
+            if (currentPage !== 1) params.set('page', currentPage);
+            const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+            window.history.replaceState(null, '', newURL);
+        }
+
+        function initializeFromURL() {
+            console.log("18\n")
+            const urlParams = new URLSearchParams(window.location.search);
+            currentFilters.q = urlParams.get('q') || '';
+            currentFilters.site = urlParams.get('site') || '';
+            currentFilters.per_page = parseInt(urlParams.get('per_page')) || 25;
+            currentPage = parseInt(urlParams.get('page')) || 1;
+            document.getElementById('filter-title').value = currentFilters.q;
+            document.getElementById('filter-site').value = currentFilters.site;
+            document.getElementById('per-page').value = currentFilters.per_page;
+        }
+
+        async function handleScrape(event) {
+            console.log("19\n")
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const query = formData.get('query');
+            
+            if (!query || !query.trim()) {
+                showAlert('error', 'Te rog introdu un termen de căutare');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const response = await fetch(`${API_BASE}/scrape/trigger?query=${query}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showAlert('success', 'Scraping pornit cu succes pentru: ' + query);
+                    document.getElementById('scrape-query').value = '';
+                    
+                    // Reload products after a delay
+                    setTimeout(() => {
+                        loadProducts();
+                    }, 2000);
+                } else {
+                    throw new Error('Eroare la pornirea scraping-ului');
+                }
+                
+            } catch (error) {
+                console.error('Scrape error:', error);
+                showAlert('error', 'Eroare la pornirea scraping-ului: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function handleFilter(event) {
+            console.log("19\n")
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            currentFilters = {
+                q: formData.get('q') || '',
+                site: formData.get('site') || '',
+                per_page: formData.get('per_page') || '25'
+            };
+            
+            currentPage = 1; // Reset to first page
+            selectedProducts.clear();
+            loadProducts();
+        }
+
+        async function handleBulkDelete(event) {
+            console.log("20\n")
+            event.preventDefault();
+            
+            if (selectedProducts.size === 0) return;
+            
+            const confirmed = confirm(`Sigur vrei să ștergi ${selectedProducts.size} produse selectate?`);
+            if (!confirmed) return;
+            
+            showLoading();
+            
+            try {
+                const formData = new FormData();
+                selectedProducts.forEach(id => {
+                    formData.append('product_ids', id);
+                });
+                
+                const response = await fetch(`${API_BASE}/bulk_delete_products`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showAlert('success', `${selectedProducts.size} produse au fost șterse cu succes`);
+                    selectedProducts.clear();
+                    loadProducts();
+                } else {
+                    throw new Error('Eroare la ștergerea produselor');
+                }
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                showAlert('error', 'Eroare la ștergerea produselor: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function changePage(direction) {
+            console.log("22\n")
+            const newPage = currentPage + direction;
+            if (newPage >= 1) {
+                currentPage = newPage;
+                selectedProducts.clear();
+                loadProducts();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSelectAll() {
+            console.log("23\n")
+            const selectAll = document.getElementById('select-all');
+            const productCheckboxes = document.querySelectorAll('.product-checkbox');
+            
+            productCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const productId = parseInt(checkbox.value);
+                
+                if (selectAll.checked) {
+                    selectedProducts.add(productId);
+                } else {
+                    selectedProducts.delete(productId);
+                }
+            });
+            
+            updateBulkActions();
+        }
+
+        function toggleProductSelection(productId) {
+            console.log("24\n")
+            if (selectedProducts.has(productId)) {
+                selectedProducts.delete(productId);
+            } else {
+                selectedProducts.add(productId);
+            }
+            
+            updateSelectAllCheckbox();
+            updateBulkActions();
+        }
+
+        function updateSelectAllCheckbox() {
+            console.log("25\n")
+            const selectAll = document.getElementById('select-all');
+            const productCheckboxes = document.querySelectorAll('.product-checkbox');
+            const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+            
+            if (checkedBoxes.length === 0) {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            } else if (checkedBoxes.length === productCheckboxes.length) {
+                selectAll.checked = true;
+                selectAll.indeterminate = false;
+            } else {
+                selectAll.checked = false;
+                selectAll.indeterminate = true;
+            }
+        }
+
+        function updateBulkActions() {
+            console.log("26\n")
+            const bulkActions = document.getElementById('bulk-actions');
+            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            const selectedCount = document.getElementById('selected-count');
+            
+            selectedCount.textContent = selectedProducts.size;
+            bulkDeleteBtn.disabled = selectedProducts.size === 0;
+            
+            if (selectedProducts.size > 0) {
+                bulkActions.classList.add('active');
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+
+        function viewProduct(productId) {
+            console.log("27\n")
+            // Navigate to product detail page
+            window.location.href = `${API_BASE}/product/${productId}`;
+        }
+
+        // Utility functions
+        function showLoading() {
+            console.log("28\n")
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            console.log("29\n")
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showAlert(type, message) {
+            console.log("30\n")
+            const alertElement = document.getElementById(`alert-${type}`);
+            const messageElement = document.getElementById(`${type}-message`);
+            
+            messageElement.textContent = message;
+            alertElement.style.display = 'flex';
+            
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // Auto-refresh every 30 seconds to check for new data
+        /* setInterval(() => {
+            loadProducts();
+        }, 30000); */
+
+        console.log('🚀 Price Tracker connected to API successfully!');
+        console.log('📡 API Base URL:', API_BASE);
+        console.log('🔄 Auto-refresh enabled every 30 seconds');
+        console.log('💡 Keyboard shortcuts available:');
+        console.log('   Ctrl+F: Focus search');
+        console.log('   Ctrl+S: Focus scrape input');
+        console.log('   Ctrl+A: Select all');
+        console.log('   Delete: Bulk delete selected');
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            console.log("31\n")
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('filter-title').focus();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        document.getElementById('scrape-query').focus();
+                        break;
+                    case 'a':
+                        e.preventDefault();
+                        document.getElementById('select-all').click();
+                        break;
+                }
+            }
+            
+            // Delete key for bulk delete
+            if (e.key === 'Delete' && selectedProducts.size > 0) {
+                document.getElementById('bulk-delete-btn').click();
+            }
+        });
+
+        // Enhanced search with debouncing
+        let searchTimeout;
+        document.getElementById('filter-title').addEventListener('input', function() {
+            console.log("32\n")
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('filter-form').dispatchEvent(new Event('submit'));
+            }, 500);
+        });
+
+        document.getElementById('filter-site').addEventListener('input', function() {
+            console.log("33\n")
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('filter-form').dispatchEvent(new Event('submit'));
+            }, 500);
+        });
+
+        // URL state management
+        function updateURL() {
+            console.log("34\n")
+            const params = new URLSearchParams();
+            if (currentFilters.q) params.set('q', currentFilters.q);
+            if (currentFilters.site) params.set('site', currentFilters.site);
+            if (currentFilters.per_page !== '25') params.set('per_page', currentFilters.per_page);
+            if (currentPage !== 1) params.set('page', currentPage);
+            
+            const newURL = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+            window.history.replaceState(null, '', newURL);
+        }
+
+        // Initialize filters from URL
+        function initializeFromURL() {
+            console.log("35\n")
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            currentFilters.q = urlParams.get('q') || '';
+            currentFilters.site = urlParams.get('site') || '';
+            currentFilters.per_page = urlParams.get('per_page') || '25';
+            currentPage = parseInt(urlParams.get('page')) || 1;
+            
+            // Update form fields
+            document.getElementById('filter-title').value = currentFilters.q;
+            document.getElementById('filter-site').value = currentFilters.site;
+            document.getElementById('per-page').value = currentFilters.per_page;
+        }
+
+        // Call on page load
+        initializeFromURL();
+
+        // Update URL when filters change
+        const originalLoadProducts = loadProducts;
+        loadProducts = function() {
+            console.log("36\n")
+            updateURL();
+            return originalLoadProducts();
+        };
+    </script>
+</body>
+</html>

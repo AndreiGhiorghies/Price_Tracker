@@ -1,0 +1,65 @@
+{
+  "save": [
+    {
+      "name": "Amazon",
+      "url": "https://www.amazon.com",
+      "url_searchTemplate": "https://www.amazon.com/s?k={query}&page={page}",
+      "selectors": {
+        "product": "div.puis-card-container.s-card-container.s-overflow-hidden",
+        "title": "h2.a-size-medium.a-spacing-none.a-color-base.a-text-normal",
+        "link": "a.a-link-normal.s-line-clamp-2.s-link-style.a-text-normal",
+        "price": "span.a-price-whole",
+        "currency": "",
+        "rating": "None",
+        "id": "",
+        "image_link": "",
+        "remove_items_with": "",
+        "end_of_pages": ""
+      }
+    }
+  ],
+  "sites": [
+    {
+      "name": "eMAG",
+      "url": "https://www.emag.ro",
+      "url_searchTemplate": "https://www.emag.ro/search/{query}/p{page}",
+      "selectors": {
+        "product": "div.card-item",
+        "title": "a.card-v2-title",
+        "link": "a.card-v2-title",
+        "price": "p.product-new-price",
+        "currency": "",
+        "rating": "div.star-rating-text",
+        "id": "data-product-id",
+        "image_link": "div.img-component.position-relative.card-v2-thumb-inner img",
+        "remove_items_with": "svg[viewBox=\"0 0 16 16\"]",
+        "end_of_pages": ""
+      }
+    },
+    {
+      "name": "Altex",
+      "url": "https://www.altex.ro",
+      "url_searchTemplate": "https://altex.ro/cauta/filtru/p/{page}/?q={query}",
+      "selectors": {
+        "product": "li.Products-item",
+        "title": ".Product-name",
+        "link": "a:has(span.Product-name)",
+        "price": ".Price-int",
+        "currency": "div.leading-none.text-red-brand.-tracking-0\\.48.lg\\:-tracking-0\\.56 span.leading-none:not(.Price-int)",
+        "rating": "span.ml-1.md\\:text-base.leading-none.truncate.font-medium.text-black.text-sm.lg\\:text-xs.xl\\:text-sm.cursor-pointer",
+        "id": "",
+        "image_link": "div.Product-photoWrapper img",
+        "remove_items_with": "",
+        "end_of_pages": ".my-4"
+      }
+    }
+  ],
+  "configuration": {
+    "max_price": "0",
+    "min_price": "1000",
+    "min_rating": "0",
+    "min_ratings": "0",
+    "min_hours_update": "0"
+  },
+  "nr_changed_products": "10"
+}

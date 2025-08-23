@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Tracker — Produse</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #0f172a;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            /* Removed backdrop-filter for performance */
+            /* backdrop-filter: blur(10px); */
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            /* Reduced box-shadow for performance */
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo h1 {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            color: var(--primary);
+            /* animation: pulse 2s infinite; */
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .scrape-form {
+            display: flex;
+            gap: 0.5rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .scrape-input {
+            border: none;
+            outline: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            width: 200px;
+            background: transparent;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            /* transition: all 0.3s ease; */
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            /* transform: translateY(-2px); */
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-success:hover {
+            /* transform: translateY(-2px); */
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-danger:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Filters Section */
+        .filters {
+            background: rgba(255, 255, 255, 0.9);
+            /* Removed backdrop-filter for performance */
+            /* backdrop-filter: blur(10px); */
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr 1fr;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+
+        .form-input, .form-select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            /* transition: all 0.3s ease; */
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Bulk Actions */
+        .bulk-actions {
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(-10px);
+            /* transition: all 0.3s ease; */
+        }
+
+        .bulk-actions.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Table Card */
+        .table-card {
+            background: rgba(255, 255, 255, 0.95);
+            /* Removed backdrop-filter for performance */
+            /* backdrop-filter: blur(10px); */
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        }
+
+        .table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .table tbody tr {
+            /* transition: all 0.2s ease; */
+        }
+
+        .table tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+            /* transform: scale(1.001); */
+        }
+
+        .product-link {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            /* transition: color 0.2s ease; */
+        }
+
+        .product-link:hover {
+            color: var(--primary);
+        }
+
+        .site-badge {
+            background: var(--gradient);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .price {
+            font-weight: 700;
+            color: var(--success);
+            font-size: 1.1rem;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stars {
+            color: var(--warning);
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Footer */
+        .table-footer {
+            padding: 1.5rem;
+            background: rgba(248, 250, 252, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--secondary);
+            /* transition: all 0.2s ease; */
+        }
+
+        .page-btn:hover:not(.disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .page-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            background: var(--gradient);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .table-card {
+                overflow-x: auto;
+            }
+
+            .table {
+                min-width: 600px;
+            }
+
+            .table-footer {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            /* Removed backdrop-filter for performance */
+            /* backdrop-filter: blur(10px); */
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Success/Error Messages */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .alert.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>Price Tracker</h1>
+                </div>
+                <div class="header-actions">
+                    <form class="scrape-form" id="scrape-form" action="{{ url_for('trigger_scrape') }}" method="post">
+                        <input type="text" class="scrape-input" placeholder="Query scrape..." id="scrape-query" name="query">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-spider"></i>
+                            Start scrape
+                        </button>
+                    </form>
+                    <button class="btn btn-success" onclick="exportCSV()">
+                        <i class="fas fa-download"></i>
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div id="alert-success" class="alert success">
+            <i class="fas fa-check-circle"></i>
+            <span id="success-message"></span>
+        </div>
+        <div id="alert-error" class="alert error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="error-message"></span>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <form class="filter-row" id="filter-form">
+                <div class="form-group">
+                    <label class="form-label">Caută titlu</label>
+                    <input type="text" class="form-input" id="filter-title" name="q" placeholder="Caută în titluri..." autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Site</label>
+                    <input type="text" class="form-input" id="filter-site" name="site" placeholder="ex: emag, altex" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Produse pe pagină</label>
+                    <select class="form-select" id="per-page" name="per_page">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" id="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Filtrează
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" id="bulk-actions">
+            <form id="bulk-delete-form" action="{{ url_for('bulk_delete_products') }}" method="post">
+                <button type="submit" class="btn btn-danger" disabled id="bulk-delete-btn">
+                    <i class="fas fa-trash"></i>
+                    Șterge selectate (<span id="selected-count">0</span>)
+                </button>
+            </form>
+        </div>
+
+        <!-- Products Table -->
+        <div class="table-card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="checkbox" id="select-all">
+                        </th>
+                        <th>#</th>
+                        <th>Site</th>
+                        <th>Titlu</th>
+                        <th>Preț</th>
+                        <th>Rating</th>
+                        <th>Ultima actualizare</th>
+                    </tr>
+                </thead>
+                <tbody id="products-table">
+                    <tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="1" onchange="toggleProductSelection(1)"></td>
+                        <td>1</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/1" class="product-link">Laptop Lenovo LOQ 15ARP9, 15.6 inch 1920 x 1080, AMD Ryzen 5 7235HS 4 C / 8 T, 4.2GHz, 2 MB 8 MB cache, 16 GB DDR5, 512 GB SSD, Nvidia GeForce RTX 3050, Windows 11 Pro</a></td>
+                        <td class="price">Lei 4077</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 20:18:59.515</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="2" onchange="toggleProductSelection(2)"></td>
+                        <td>2</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/2" class="product-link">Laptop Lenovo LOQ AMD Ryzen 5 7235HS 15.6inch 16GB DDR5-SDRAM 512GB NVIDIA GeForce RTX 3050 Wi-Fi 6 (802.11ax) Windows 11 Home Grey + Backpack</a></td>
+                        <td class="price">Lei 4127</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 20:19:11.699</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="3" onchange="toggleProductSelection(3)"></td>
+                        <td>3</td>
+                        <td><span class="site-badge">Altex</span></td>
+                        <td><a href="/product/3" class="product-link">Laptop Gaming LENOVO LOQ 15ARP9, AMD Ryzen 5 7235HS pana la 4.2GHz, 15.6" FHD, 24GB, SSD 512GB, NVIDIA GeForce RTX 3050 6GB, Free DOS, Luna Grey</a></td>
+                        <td class="price">lei 3199</td>
+                        <td>4.54 (13)</td>
+                        <td class="text-muted">2025-08-17 20:19:04.486</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="4" onchange="toggleProductSelection(4)"></td>
+                        <td>4</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/4" class="product-link">Laptop Lenovo LOQ 15ARP9, 15.6 inch 1920 x 1080, AMD Ryzen 5 7235HS 4 C / 8 T, 4.2GHz, 2 MB 8 MB cache, 16 GB DDR5, 512 GB SSD, Nvidia GeForce RTX 3050, Free DOS</a></td>
+                        <td class="price">Lei 3684</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 20:19:11.330</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="5" onchange="toggleProductSelection(5)"></td>
+                        <td>5</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/5" class="product-link">Laptop Lenovo LOQ 15ARP9, 15.6 inch 1920 x 1080, AMD Ryzen 5 7235HS 4 C / 8 T, 4.2GHz, 2 MB 8 MB cache, 16 GB DDR5, 512 GB SSD, Nvidia GeForce RTX 3050, Windows 11 Home</a></td>
+                        <td class="price">Lei 4305</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 20:19:11.650</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="6" onchange="toggleProductSelection(6)"></td>
+                        <td>6</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/6" class="product-link">Laptop Lenovo LOQ 15.6" AMD Ryzen 5 7235HS, 16 GB RAM, 512 GB SSD, NVIDIA GeForce RTX 3050</a></td>
+                        <td class="price">Lei 4720</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 20:19:28.910</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="7" onchange="toggleProductSelection(7)"></td>
+                        <td>7</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/7" class="product-link">Laptop Gaming LENOVO LOQ 15ARP9, AMD Ryzen 5 7235HS pana la 4.2GHz, 15.6" FHD, 24GB, SSD 512GB, NVIDIA GeForce RTX 3050 6GB, Free DOS, Gri</a></td>
+                        <td class="price">Lei 4900</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 20:19:29.604</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="8" onchange="toggleProductSelection(8)"></td>
+                        <td>8</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/8" class="product-link">Laptop, Lenovo LOQ 15ARP, AMD Ryzen 5, 12GB RAM, SSD 512GB, NVIDIA GeForce RTX 3050, 15,6" Full HD, 144Hz, gri</a></td>
+                        <td class="price">Lei 4212</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 20:19:30.116</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="73" onchange="toggleProductSelection(73)"></td>
+                        <td>9</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/73" class="product-link">Telefon mobil Samsung Galaxy A55, Dual SIM, 256GB, 12GB RAM, 5G, Awesome Navy</a></td>
+                        <td class="price">Lei 2049</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 21:16:21.010</td>
+                    </tr><tr>
+                        <td><input type="checkbox" class="checkbox product-checkbox" value="74" onchange="toggleProductSelection(74)"></td>
+                        <td>10</td>
+                        <td><span class="site-badge">eMAG</span></td>
+                        <td><a href="/product/74" class="product-link">Telefon mobil Samsung Galaxy A55, Dual SIM, 8GB, 128GB, 5G, Awesome Navy</a></td>
+                        <td class="price">Lei 1789</td>
+                        <td>-</td>
+                        <td class="text-muted">2025-08-17 21:16:21.233</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="table-footer">
+                <div>
+                    Total: <strong id="total-products">{{ total }}</strong> produse
+                </div>
+                <div class="pagination">
+                    <!-- Paginarea va fi populată dinamic cu JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Se încarcă...</div>
+    </div>
+</body>
+</html>

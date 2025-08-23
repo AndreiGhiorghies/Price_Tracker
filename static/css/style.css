@@ -1,0 +1,220 @@
+/* Variabile culori */
+:root {
+  --primary: #ff6b6b;
+  --primary-hover: #ff5252;
+  --secondary: #4ecdc4;
+  --accent: #ffe66d;
+  --text: #2d3436;
+  --text-light: #636e72;
+  --bg-main: #f9f7f7;
+  --bg-card: #ffffff;
+  --bg-hover: #fff8f8;
+  --border: #dfe6e9;
+  --success: #6c5ce7;
+  --danger: #e17055;
+}
+
+/* Reset și bază */
+body {
+  background: var(--bg-main);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+}
+
+/* Header și navigare */
+.sticky-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-card);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  padding: 1.2rem 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-title {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Card și containere */
+.card {
+  background: var(--bg-card);
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* Butoane și inputs */
+.btn {
+  border-radius: 12px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.form-control, .form-select {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 0.6rem 1rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255,107,107,0.1);
+}
+
+/* Tabel */
+.table {
+  margin: 0;
+}
+
+.table thead th {
+  background: var(--bg-main);
+  font-weight: 600;
+  color: var(--text-light);
+  padding: 1rem;
+  border: none;
+}
+
+.table tbody td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.table td a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.table td a:hover {
+  color: var(--primary);
+}
+
+/* Badge și etichete */
+.badge {
+  padding: 0.5em 1em;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.badge-total {
+  background: var(--primary);
+  color: white;
+  font-size: 0.9rem;
+}
+
+.badge-site {
+  background: var(--secondary);
+  color: white;
+}
+
+/* Paginare */
+.pagination {
+  gap: 0.3rem;
+}
+
+.page-link {
+  border-radius: 8px;
+  border: none;
+  color: var(--text);
+  padding: 0.5rem 1rem;
+}
+
+.page-link:hover {
+  background: var(--bg-hover);
+  color: var(--primary);
+}
+
+.page-item.active .page-link {
+  background: var(--primary);
+}
+
+.page-item.disabled .page-link {
+  background: var(--bg-main);
+  color: var(--text-light);
+}
+
+/* Checkbox personalizat */
+.custom-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.custom-checkbox:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sticky-top-bar {
+    padding: 1rem 0;
+  }
+  
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+  
+  .btn {
+    padding: 0.4rem 1rem;
+  }
+}
+
+/* Animații și tranziții */
+.btn, .form-control, .badge, .table tr {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Loading states */
+.btn-loading {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* Tooltip customizat */
+.tooltip-inner {
+  background: var(--text);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}

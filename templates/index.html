@@ -1148,9 +1148,9 @@
             document.getElementById('bulk-delete-modal').style.display = 'none';
             showLoading();
             try {
-                let formData = new FormData();
-                selectedProducts.forEach(id => formData.append('product_ids', id));
-                let resp = await fetch('/bulk_delete', { method: 'POST', body: formData });
+                let selected_ids = [];
+                selectedProducts.forEach(id => selected_ids.push(id));
+                let resp = await fetch(`${API_BASE}/products/bulk_delete`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({numbers: selected_ids}) });
                 const data = await resp.json();
                 const count = selectedProducts.size;
                 const isSingular = count === 1;
@@ -1180,11 +1180,14 @@
             try {
                 let params = new URLSearchParams({ q: currentFilters.q || '', site: currentFilters.site || '' });
                 if (format === 'csv') {
-                    window.location.href = `/export.csv?${params.toString()}`;
+                    let resp = await fetch(`${API_BASE}/export_csv?q=${currentFilters.q}&site=${currentFilters.site}`);
+                    window.location.href = resp.url;
                 } else if (format === 'pdf') {
-                    window.location.href = `/export.pdf?${params.toString()}`;
+                    let resp = await fetch(`${API_BASE}/export_pdf?q=${currentFilters.q}&site=${currentFilters.site}`);
+                    window.location.href = resp.url;
                 } else if (format === 'xlsx') {
-                    window.location.href = `/export.xlsx?${params.toString()}`;
+                    let resp = await fetch(`${API_BASE}/export_xlsx?q=${currentFilters.q}&site=${currentFilters.site}`);
+                    window.location.href = resp.url;
                 }
             } catch (error) {
                 showAlert('error', 'Eroare la export: ' + error.message);

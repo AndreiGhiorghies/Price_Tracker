@@ -7,7 +7,7 @@ import asyncio
 import json
 
 from Database import database_initialized, init_db
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 DB_PATH = "tracker.db"
 APP = FastAPI(title="Price Tracker API")
@@ -229,23 +229,25 @@ async def delete_product(product_id: int, db: aiosqlite.Connection = Depends(get
 
     return {"ok": True} """
 
+class NumbersRequest(BaseModel):
+    numbers: List[int]
 
 @APP.post("/products/bulk_delete")
 async def bulk_delete_products(
-    ids: List[int] = Body(..., embed=True),
+    ids: NumbersRequest,
     db: aiosqlite.Connection = Depends(get_db)
 ):
     if not ids:
         return JSONResponse({"ok": False, "error": "No ids provided"}, status_code=400)
     
-    q_marks = ','.join(['?'] * len(ids))
+    q_marks = ','.join(['?'] * len(ids.numbers))
 
-    await db.execute(f"DELETE FROM price_history WHERE product_id IN ({q_marks})", ids)
-    await db.execute(f"DELETE FROM products WHERE id IN ({q_marks})", ids)
+    await db.execute(f"DELETE FROM price_history WHERE product_id IN ({q_marks})", ids.numbers)
+    await db.execute(f"DELETE FROM products WHERE id IN ({q_marks})", ids.numbers)
 
     await db.commit()
     
-    return JSONResponse({"ok": True, "deleted": len(ids)})
+    return JSONResponse({"ok": True, "deleted": len(ids.numbers)})
 
 @APP.post("/delete_db")
 async def delete_db(db: aiosqlite.Connection = Depends(get_db)):
@@ -437,5 +439,110 @@ async def get_product_image(product_id: Optional[str] = Query(0, description="Id
     async with db.execute("""SELECT image_link FROM products WHERE id = ?""", (str(product_id),)) as cur:
         row = await cur.fetchone()
     return row[0] if row else ""
+
+@APP.get("/export_csv")
+async def export_csv(
+    q: Optional[str] = Query(None, description="Queri-ul de la search"),
+    site: Optional[str] = Query(None, description="Site-ul de la filtre"),
+    db: aiosqlite.Connection = Depends(get_db)
+):
+    import io
+    import csv
+    # Folosește explicit db din Depends pentru list_products
+    resp = await list_products(q=q, site=site, per_page=-1, page=1, order_by='id', reversed=False, db=db, min_price=None, max_price=None)
+    items = resp.items if resp else None
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["id","site_name","external_id","title","link","currency","last_price","rating","ratings_count","first_seen_at","last_seen_at"])
+    if items:
+        for r in items:
+            writer.writerow([r.id, r.site_name, r.external_id, r.title, r.link, r.currency, r.last_price, r.rating, r.ratings_count, r.first_seen_at, r.last_seen_at])
+    output.seek(0)
+    return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=products.csv"})
+
+@APP.get("/export_pdf")
+async def export_pdf(
+    q: Optional[str] = Query(None, description="Queri-ul de la search"),
+    site: Optional[str] = Query(None, description="Site-ul de la filtre"),
+    db: aiosqlite.Connection = Depends(get_db)
+):
+    import tempfile
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.utils import simpleSplit
+    from fastapi.responses import FileResponse
+
+    resp = await list_products(q=q, site=site, per_page=-1, page=1, order_by='id', reversed=False, db=db, min_price=None, max_price=None)
+    items = resp.items if resp else None
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        pdf_path = tmp.name
+    c = canvas.Canvas(pdf_path, pagesize=A4)
+    width, height = A4
+    x, y = 40, height - 40
+    line_height = 18
+    max_width = width - 80  # margini
+
+    if items:
+        # Extrage dict din Pydantic model
+        keys = list(items[0].dict().keys())
+        c.setFont("Helvetica-Bold", 12)
+        header_text = " | ".join(keys)
+        header_lines = simpleSplit(header_text, "Helvetica-Bold", 12, max_width)
+        for line in header_lines:
+            c.drawString(x, y, line)
+            y -= line_height
+        c.setFont("Helvetica", 10)
+        for item in items:
+            item_dict = item.dict()
+            line = " | ".join(str(item_dict.get(k, "")) for k in keys)
+            lines = simpleSplit(line, "Helvetica", 10, max_width)
+            for l in lines:
+                c.drawString(x, y, l)
+                y -= line_height
+                if y < 40:
+                    c.showPage()
+                    y = height - 40
+            # empty line between items
+            y -= line_height
+            if y < 40:
+                c.showPage()
+                y = height - 40
+
+    c.save()
+    return FileResponse(pdf_path, media_type="application/pdf", filename="products.pdf")
+
+@APP.get("/export_xlsx")
+async def export_xlsx(q: Optional[str] = Query(None, description="Queri-ul de la search"),
+    site: Optional[str] = Query(None, description="Site-ul de la filtre"),
+    db: aiosqlite.Connection = Depends(get_db)
+):
+    import tempfile
+    import xlsxwriter
+    from flask import jsonify
+    from fastapi.responses import FileResponse
+
+    resp = await list_products(q=q, site=site, per_page=-1, page=1, order_by='id', reversed=False, db=db, min_price=None, max_price=None)
+    items = resp.items if resp else None
+
+    # Creează fișier Excel temporar
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+        xlsx_path = tmp.name
+
+    workbook = xlsxwriter.Workbook(xlsx_path)
+    worksheet = workbook.add_worksheet()
+
+    if items:
+        keys = list(items[0].dict().keys())
+        for col, key in enumerate(keys):
+            worksheet.write(0, col, key)
+        for row, item in enumerate(items, start=1):
+            for col, key in enumerate(keys):
+                item_dict = item.dict()
+                worksheet.write(row, col, item_dict.get(key, ""))
+    workbook.close()
+
+    return FileResponse(xlsx_path, media_type="application/pdf", filename="products.xlsx")
+
 
 # python -m uvicorn API:APP --reload --host 0.0.0.0 --port 8000

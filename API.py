@@ -82,12 +82,12 @@ def row_to_product(row) -> ProductOut:
         last_price=row[6],
         rating=row[7],
         ratings_count=row[8],
-        first_seen_at=row[9],
+        first_seen_at=row[9].split(".")[0],
         last_seen_at=row[10].split(".")[0],
     )
 
 def row_to_price(row) -> PricePoint:
-    return PricePoint(id=row[0], product_id=row[1], price_minor=row[2], captured_at=row[3])
+    return PricePoint(id=row[0], product_id=row[1], price_minor=row[2], captured_at=row[3].split(".")[0])
 
 # ---------- endpoints ----------
 
@@ -219,7 +219,7 @@ def scrape_status():
         scrape_process = None
         return {"status": "done", "len_products": config["nr_changed_products"]}
 
-@APP.delete("/products/{product_id}")
+""" @APP.delete("/products/{product_id}")
 async def delete_product(product_id: int, db: aiosqlite.Connection = Depends(get_db)):
     # Șterge istoricul de prețuri
     await db.execute("DELETE FROM price_history WHERE product_id = ?", (product_id,))
@@ -227,7 +227,7 @@ async def delete_product(product_id: int, db: aiosqlite.Connection = Depends(get
     await db.execute("DELETE FROM products WHERE id = ?", (product_id,))
     await db.commit()
 
-    return {"ok": True}
+    return {"ok": True} """
 
 
 @APP.post("/products/bulk_delete")
@@ -431,5 +431,11 @@ async def delete_site(index: Optional[str] = Query(None, description="Indexul si
 
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
+
+@APP.get("/product_image")
+async def get_product_image(product_id: Optional[str] = Query(0, description="Id produsului"), db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute("""SELECT image_link FROM products WHERE id = ?""", (str(product_id),)) as cur:
+        row = await cur.fetchone()
+    return row[0] if row else ""
 
 # python -m uvicorn API:APP --reload --host 0.0.0.0 --port 8000

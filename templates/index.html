@@ -693,7 +693,7 @@
 
             <div class="table-footer">
                 <div>
-                    Total: <strong id="total-products">{{ total }}</strong> produse
+                    Total: <strong id="total-products"></strong> produse
                 </div>
                 <div class="pagination">
                     <!-- Paginarea va fi populată dinamic cu JS -->
@@ -1024,7 +1024,7 @@
                     order_by: lastOrderBy,
                     reversed: reversed
                 });
-                let resp = await fetch(`/products?${params.toString()}`, { headers: { 'Accept': 'application/json' } });
+                let resp = await fetch(`${API_BASE}/products?${params.toString()}`, { headers: { 'Accept': 'application/json' } });
                 if (!resp.ok) throw new Error('Eroare la încărcarea produselor');
                 let data = await resp.json();
                 renderProducts(data);
@@ -1048,7 +1048,7 @@
                         <td><input type="checkbox" class="checkbox product-checkbox" value="${p.id}" onchange="toggleProductSelection(${p.id})"></td>
                         <td>${idx + 1 + (data.page-1)*data.per_page}</td>
                         <td><span class="site-badge">${p.site_name}</span></td>
-                        <td><a href="/product/${p.id}" class="product-link">${p.title}</a></td>
+                        <td><a href="product.html?product_id=${p.id}" class="product-link">${p.title}</a></td>
                         <td class="price">${p.currency || ''} ${p.last_price !== null ? p.last_price : '-'}</td>
                         <td>${p.rating !== null ? p.rating : '-'}${p.ratings_count ? ` (${p.ratings_count})` : ''}</td>
                         <td class="text-muted">${p.last_seen_at}</td>

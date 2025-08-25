@@ -1,49 +1,388 @@
 <!doctype html>
 <html lang="ro">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{{ product.title }}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .product-card {
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 22px;
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.07);
+      border: 1px solid #e2e8f0;
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .product-image {
+      width: 240px;
+      height: 240px;
+      object-fit: contain;
+      border-radius: 18px;
+      background: #f3f4f6;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 1.2rem;
+      display: block;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .product-details-list {
+      width: 100%;
+      margin-bottom: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      align-items: center;
+    }
+
+    .product-details-list p {
+      margin: 0;
+      font-size: 1.07rem;
+      text-align: center;
+    }
+
+    .site-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-left: 0.3em;
+      display: inline-block;
+    }
+
+    .price {
+      font-weight: 700;
+      color: #10b981;
+      font-size: 1.1rem;
+      display: inline-block;
+    }
+
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      justify-content: center;
+    }
+
+    .open-link-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 0.9rem 0;
+      font-weight: 600;
+      font-size: 1.08rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7rem;
+      box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.08);
+      transition: background 0.2s, box-shadow 0.2s;
+      margin-top: 1.1rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .open-link-btn:hover {
+      background: linear-gradient(135deg, #4f46e5, #764ba2);
+      box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.12);
+    }
+
+    .btn-link {
+      background: none;
+      color: #6366f1;
+      font-weight: 600;
+      border: none;
+      padding: 0.5rem 0;
+      text-decoration: none;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      font-weight: 600;
+      color: #0f172a;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 1.1rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+
+    .table th,
+    .table td {
+      padding: 0.8rem;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    .table thead {
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    }
+
+    .text-muted {
+      color: #64748b;
+    }
+
+    .stars i,
+    .stars .fa-star,
+    .stars .fa-star-half-alt,
+    .stars .fa-star-o,
+    .stars .far,
+    .stars .fas {
+      color: #f59e0b !important;
+      /* For increased specificity */
+      filter: none !important;
+      opacity: 1 !important;
+      -webkit-text-stroke: 0 !important;
+    }
+
+    .price-up {
+      color: #ef4444;
+      font-weight: bold;
+    }
+
+    .price-down,
+    .price-first {
+      color: #10b981;
+      font-weight: bold;
+    }
+
+    .history-table-section {
+      width: 100%;
+      overflow-x: auto;
+      padding: 0;
+      margin: 0;
+    }
+
+    .history-table-section .table {
+      min-width: 420px;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 0.5rem;
+      }
+
+      .product-card {
+        padding: 1rem 0.5rem;
+      }
+
+      .product-image {
+        width: 100%;
+        max-width: 320px;
+        height: auto;
+      }
+    }
+  </style>
 </head>
-<body class="bg-light">
-<div class="container py-4">
-  <a href="{{ url_for('index') }}" class="btn btn-link mb-3">&larr; Înapoi</a>
 
-  <div class="card mb-3">
-    <div class="card-body">
-      <h3 class="card-title">{{ product.title }}</h3>
-      <p class="mb-1"><strong>Site:</strong> {{ product.site_name }}</p>
-      <p class="mb-1"><strong>Preţ curent:</strong> {{ product.currency or '' }} {{ (product.last_price) if product.last_price is not none else '-' }}</p>
-      <p class="mb-1"><strong>Rating:</strong> {{ product.rating or '-' }} {% if product.ratings_count %}({{ product.ratings_count }}){% endif %}</p>
-      <p class="mb-1"><strong>Link:</strong> <a href="{{ product.link }}" target="_blank">Deschide</a></p>
-      <form action="{{ url_for('delete_product', product_id=product.id) }}" method="post" onsubmit="return confirm('Sigur vrei să ștergi acest produs și istoricul său?');" class="mt-3">
-        <button class="btn btn-danger btn-sm">Șterge produsul</button>
-      </form>
+<body>
+  <div class="container">
+    <a href="#" onclick="window.history.back(); return false;" class="btn btn-link"><i class="fas fa-arrow-left"></i> Înapoi
+    </a>
+    <div id="product-card" class="product-card" style="display:none;">
+      <!-- Detalii produs vor fi populate dinamic -->
     </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header">Istoric preț (ultimele {{ history|length }})</div>
-    <div class="card-body p-0">
-      {% if history %}
-      <div class="table-responsive">
-        <table class="table table-sm mb-0">
-          <thead class="table-light"><tr><th>Data</th><th>Preţ</th></tr></thead>
-          <tbody>
-          {% for h in history %}
-            <tr><td class="text-muted">{{ h.captured_at }}</td><td>{{ (h.price_minor) if h.price_minor is not none else '-' }}</td></tr>
-          {% endfor %}
-          </tbody>
-        </table>
+    <div id="history-card" class="card" style="display:flex; position: relative; width: 150%; right: 25%;">
+      <div class="card-header">
+        <i class="fas fa-history"></i> Istoric preț (<span id="history-count">0</span>)
       </div>
-      {% else %}
-        <div class="p-3">Niciun istoric</div>
-      {% endif %}
+      <div class="card-body p-0" id="history-table-container">
+        <!-- Tabelul istoric va fi populat dinamic -->
+      </div>
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script>
+    const API_URL = "http://127.0.0.1:8000";
 
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    function getProductIdFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('product_id');
+    }
+
+    async function fetchProduct(productId) {
+      const resp = await fetch(`${API_URL}/products/${productId}`);
+      if (!resp.ok) return null;
+      return await resp.json();
+    }
+
+    async function fetchHistory(productId) {
+      const resp = await fetch(`${API_URL}/products/${productId}/history`);
+      if (!resp.ok) return [];
+      return await resp.json();
+    }
+
+    async function fetchProductImage(productId) {
+      const resp = await fetch(`${API_URL}/product_image?product_id=${productId}`);
+      if (!resp.ok) return "";
+      return await resp.text();
+    }
+
+    function renderStars(rating) {
+      if (!rating) return '<span>-</span>';
+      let html = '<span class="stars">';
+      for (let i = 1; i <= 5; i++) {
+        if (rating >= i) html += '<i class="fas fa-star stars"></i>';
+        else if (rating >= i - 0.5) html += '<i class="fas fa-star-half-alt stars"></i>';
+        else html += '<i class="far fa-star stars"></i>';
+      }
+      html += '</span>';
+      return html;
+    }
+
+    function renderProduct(product, imageUrl) {
+      document.title = product.title;
+      const card = document.getElementById('product-card');
+      card.innerHTML = `
+        <img src=${imageUrl} alt="Imagine produs" class="product-image">
+        <div class="card-title">${product.title}</div>
+        <div class="product-details-list">
+          <p><strong>Site:</strong> <span class="site-badge">${product.site_name}</span></p>
+          <p><strong>Preţ curent:</strong> <span class="price">${product.currency || ''} ${product.last_price !== null ? product.last_price : '-'}</span></p>
+          <p class="rating"><strong>Rating:</strong> ${renderStars(product.rating)} <span>${product.rating !== null ? product.rating : '-'}</span> ${product.ratings_count ? `<span class="text-muted">(${product.ratings_count})</span>` : ''}</p>
+        </div>
+        <a href="${product.link}" target="_blank" class="open-link-btn">
+          <i class="fas fa-external-link-alt"></i> Deschide produsul
+        </a>
+      `;
+      card.style.display = 'flex';
+    }
+
+    function renderHistory(history) {
+      document.getElementById('history-count').textContent = history.length;
+      if (!history.length) {
+        document.getElementById('history-table-container').innerHTML =
+          '<div class="p-3 text-muted" style="text-align:center;">Niciun istoric</div>';
+      } else {
+        history = history.slice().reverse();
+        let rows = '';
+        history.forEach((h, idx) => {
+          let price = h.price_minor !== null ? h.price_minor : null;
+          let percent = '';
+          let priceClass = '';
+          let prevPrice = (idx + 1 < history.length) ? history[idx + 1].price_minor : null;
+          if (idx === history.length - 1) {
+            priceClass = 'price-first';
+            percent = '';
+          } else if (prevPrice !== null && price !== null && prevPrice !== 0) {
+            let delta = price - prevPrice;
+            let pct = ((delta / prevPrice) * 100).toFixed(2);
+            if (delta < 0) {
+              percent = `<span class="price-down">${pct}%</span>`;
+              priceClass = 'price-down';
+            } else if (delta > 0) {
+              percent = `<span class="price-up">+${pct}%</span>`;
+              priceClass = 'price-up';
+            } else {
+              percent = `<span style="color:#64748b;">0%</span>`;
+              priceClass = '';
+            }
+          } else {
+            percent = '';
+            priceClass = '';
+          }
+          rows += `<tr>
+          <td style="width:2.5em;text-align:center;color:#64748b;">${idx + 1}</td>
+          <td class="text-muted">${h.captured_at}</td>
+          <td class="${priceClass}">${price !== null ? price : '-'}</td>
+          <td style="text-align:center;">${percent}</td>
+        </tr>`;
+        });
+        document.getElementById('history-table-container').innerHTML = `
+        <div class="history-table-section">
+          <table class="table table-sm mb-0">
+            <thead style="width=100%">
+              <tr>
+                <th style="width:2.5em;text-align:center;">#</th>
+                <th>Data</th>
+                <th>Preţ</th>
+                <th style="text-align:center;">Δ %</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+      }
+      document.getElementById('history-card').style.display = 'block';
+    }
+
+    (async function () {
+      const productId = getProductIdFromURL();
+      if (!productId) {
+        document.body.innerHTML = '<div style="padding:2em;text-align:center;">Product ID lipsă în URL</div>';
+        return;
+      }
+      const product = await fetchProduct(productId);
+      if (!product) {
+        document.body.innerHTML = '<div style="padding:2em;text-align:center;">Produsul nu a fost găsit</div>';
+        return;
+      }
+      const imageUrl = await fetchProductImage(productId);
+      renderProduct(product, imageUrl);
+      const history = await fetchHistory(productId);
+      renderHistory(history);
+    })();
+  </script>
 </body>
+
 </html>

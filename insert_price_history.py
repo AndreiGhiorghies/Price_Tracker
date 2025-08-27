@@ -11,16 +11,21 @@ def insert_price_history(n=10):
     # Generează n înregistrări cu prețuri random și date consecutive
     now = datetime.now()
     base_price = 1000
-    for i in range(n):
+
+    """ for i in range(n):
         captured_at = (now - timedelta(days=n-i)).strftime("%Y-%m-%d %H:%M:%S")
         price_minor = base_price + random.randint(-100, 100)
         cur.execute(
-            "INSERT INTO price_history (product_id, price_minor, captured_at) VALUES (?, ?, ?)",
+            "INSERT INTO price_history (external_id, price_minor, captured_at) VALUES (?, ?, ?)",
             (EXTERNAL_ID, price_minor, captured_at)
         )
-    conn.commit()
+    conn.commit() """
+
+    cur.execute("SELECT COUNT(*) FROM price_history WHERE product_id = ?", (EXTERNAL_ID,))
+    count = cur.fetchone()[0]
     conn.close()
     print(f"Inserted {n} rows for external_id={EXTERNAL_ID}")
+    print(f"Total rows with external_id={EXTERNAL_ID}: {count}")
 
 if __name__ == "__main__":
     insert_price_history(10)

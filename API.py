@@ -6,10 +6,10 @@ import aiosqlite
 import asyncio
 import json
 
-from Database import database_initialized, init_db
+from Database import database_initialized, init_db, DB_PATH
 from fastapi.responses import JSONResponse, StreamingResponse
 
-DB_PATH = "tracker.db"
+#DB_PATH = "tracker.db"
 APP = FastAPI(title="Price Tracker API")
 scrape_process = None
 
@@ -37,11 +37,6 @@ async def get_db():
 async def on_startup():
     if not database_initialized:
         await init_db(DB_PATH)
-    # asigură-te că DB-ul există (poți apela init_db din modulul tău)
-    # dacă ai funcția init_db importabilă, o poți apela aici.
-    # from db import init_db
-    # await init_db(DB_PATH)
-    pass
 
 # ---------- Pydantic models ----------
 class ProductOut(BaseModel):
@@ -89,8 +84,6 @@ def row_to_product(row) -> ProductOut:
 def row_to_price(row) -> PricePoint:
     return PricePoint(id=row[0], product_id=row[1], price_minor=row[2], captured_at=row[3].split(".")[0])
 
-# ---------- endpoints ----------
-
 @APP.get("/products", response_model=ProductsList)
 async def list_products(
     q: Optional[str] = Query(None, description="filtru text pe titlu"),
@@ -103,9 +96,7 @@ async def list_products(
     reversed: bool = Query(0, le=1, ge=0),
     db: aiosqlite.Connection = Depends(get_db)
 ):
-    # construire WHERE
-    allowed_per_page = [10, 25, 50]
-    if per_page not in allowed_per_page:
+    if per_page not in [10, 25, 50]:
         per_page = 25
 
     if page < 0:
@@ -163,8 +154,10 @@ async def get_product(product_id: int, db: aiosqlite.Connection = Depends(get_db
         FROM products WHERE id = ?
     """, (product_id,)) as cur:
         row = await cur.fetchone()
+    
     if not row:
         raise HTTPException(status_code=404, detail="Product not found")
+    
     return row_to_product(row)
 
 @APP.get("/products/{product_id}/history", response_model=List[PricePoint])
@@ -181,17 +174,14 @@ async def get_price_history(product_id: int,
         rows = await cur.fetchall()
     return [row_to_price(r) for r in rows]
 
-# Optional: forțează o rulare de scrape (trebuie să încorporezi logica ta)
 @APP.post("/scrape/trigger")
 async def trigger_scrape(query: Optional[str] = Query(None, description="Introduci query-ul: "),
                          db: aiosqlite.Connection = Depends(get_db)):
     config_path = "config.json"
-    csv_file = "produse.csv"
-
+    
     cmd = ["python", "scrape_worker.py",
             query or "",
-            config_path,
-            csv_file]
+            config_path]
     
     import subprocess
 
@@ -218,16 +208,6 @@ def scrape_status():
             config = {}
         scrape_process = None
         return {"status": "done", "len_products": config["nr_changed_products"]}
-
-""" @APP.delete("/products/{product_id}")
-async def delete_product(product_id: int, db: aiosqlite.Connection = Depends(get_db)):
-    # Șterge istoricul de prețuri
-    await db.execute("DELETE FROM price_history WHERE product_id = ?", (product_id,))
-    # Șterge produsul
-    await db.execute("DELETE FROM products WHERE id = ?", (product_id,))
-    await db.commit()
-
-    return {"ok": True} """
 
 class NumbersRequest(BaseModel):
     numbers: List[int]

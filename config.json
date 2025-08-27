@@ -52,31 +52,17 @@
         "remove_items_with": "",
         "end_of_pages": ".my-4"
       }
-    },
-    {
-      "name": "Nume nou site",
-      "url": "",
-      "url_searchTemplate": "asdf",
-      "selectors": {
-        "product": "",
-        "title": "",
-        "link": "",
-        "price": "",
-        "currency": "",
-        "rating": "",
-        "id": "",
-        "image_link": "",
-        "remove_items_with": "asdf",
-        "end_of_pages": ""
-      }
     }
   ],
   "configuration": {
     "max_price": "0",
-    "min_price": "1000",
+    "min_price": "0",
     "min_rating": "0",
     "min_ratings": "0",
     "min_hours_update": "0"
   },
-  "nr_changed_products": "10"
+  "nr_changed_products": "16",
+  "schedule_time": "20:37",
+  "schedule_query": "Telefon samsung a55",
+  "discord_user_id": "721389952105185310"
 }

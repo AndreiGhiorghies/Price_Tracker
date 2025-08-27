@@ -1,8 +1,10 @@
 import aiosqlite
 from typing import List, Optional
 from urllib.parse import urljoin
+import os
 
-DB_PATH = "tracker.db"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = script_dir + "\\" + "tracker.db"
 NOW_SQL = "strftime('%Y-%m-%d %H:%M:%f','now','localtime')"
 database_initialized = False
 
@@ -31,6 +33,12 @@ async def init_db(path: str = DB_PATH):
           price_minor INTEGER,
           captured_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f','now','localtime')),
           FOREIGN KEY(product_id) REFERENCES products(id)
+        );
+        CREATE TABLE IF NOT EXISTS scheduler (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL,
+            max_price INTEGER NOT NULL,
+            FOREIGN KEY(product_id) REFERENCES products(id)
         );
         CREATE INDEX IF NOT EXISTS idx_products_site_external ON products(site_name, external_id);
         CREATE INDEX IF NOT EXISTS idx_products_site_link ON products(site_name, link);

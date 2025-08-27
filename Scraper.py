@@ -9,6 +9,7 @@ import json
 from urllib.parse import quote_plus
 from Database import *
 import sys
+import os
 
 class Filters:
     def __init__(self, min_price = 0, max_price = 0, min_rating:float = 0, min_ratings = 0) -> None:
@@ -71,7 +72,7 @@ class Scraper:
 
         return value, nr
 
-    async def RunScrap(self, query, filter: Filters, update_time: float = 12.0):
+    async def RunScrap(self, query, filter: Filters, update_time: float = 0.0):
         if not database_initialized:
             await init_db()
         db = await aiosqlite.connect(DB_PATH)
@@ -218,7 +219,8 @@ class Scraper:
                 pgn += 1
 
             print(f"[OK] Am salvat {produse_nr} produse")
-            config_path = "config.json"
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = script_dir + "\\config.json"
             try:
                 with open(config_path, "r", encoding="utf-8") as f:
                     config = json.load(f)

@@ -5,9 +5,7 @@ import json
 if __name__ == "__main__":
     query = sys.argv[1]
     config_path = sys.argv[2]
-    csv_file = sys.argv[3]
 
-    config_path = "config.json"
     try:
         with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)

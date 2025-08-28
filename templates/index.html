@@ -158,6 +158,10 @@
             transform: none;
         }
 
+        .btn-bulk-delete:hover {
+            transform: translateY(-2px);
+        }
+
         /* Filters Section */
         .filters {
             background: rgba(255, 255, 255, 0.9);
@@ -545,6 +549,128 @@
         .export-dropdown.open .dropdown-menu {
             display: block;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 500px;
+            margin: 5rem auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        /* Scheduler specific */
+        #scheduler-modal {
+            z-index: 2100;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 500px;
+            margin: 5rem auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        /* Scheduler specific */
+        #scheduler-modal {
+            z-index: 2100;
+        }
     </style>
 </head>
 <body>
@@ -623,9 +749,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary" id="filter-btn">
-                        <i class="fas fa-filter"></i>
-                        Filtrează
+                    <!-- Înlocuit butonul Filtrează cu Scheduler -->
+                    <button type="button" class="btn btn-primary" id="open-scheduler-btn">
+                        <i class="fas fa-clock"></i>
+                        Scheduler
                     </button>
                 </div>
             </form>
@@ -633,12 +760,17 @@
 
         <!-- Bulk Actions -->
         <div class="bulk-actions" id="bulk-actions">
-            <form id="bulk-delete-form">
-                <button type="submit" class="btn btn-danger" disabled id="bulk-delete-btn">
+            <form id="bulk-delete-form" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-bulk-delete" disabled id="bulk-delete-btn">
                     <i class="fas fa-trash"></i>
                     Șterge selectate (<span id="selected-count">0</span>)
                 </button>
             </form>
+            <!-- Buton nou pentru urmărire preț -->
+            <button type="button" class="btn btn-primary" id="bulk-track-btn" style="margin-left:0.5rem; display:none;">
+                <i class="fas fa-eye"></i>
+                Urmărește prețul
+            </button>
         </div>
 
         <!-- Products Table -->
@@ -829,6 +961,33 @@
         </div>
     </div>
 
+    <!-- Modal Scheduler -->
+    <div id="scheduler-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:2100;">
+        <div style="background:white; max-width:400px; margin:40px auto; padding:2rem; border-radius:15px; box-shadow:0 8px 32px rgba(0,0,0,0.15); position:relative;">
+            <h2 style="margin-bottom:1rem;">Scheduler Scraping</h2>
+            <form id="scheduler-form">
+                <div style="margin-bottom:1rem;">
+                    <label>Scrape query:</label>
+                    <input type="text" id="scheduler-query" name="query" class="form-input" style="width:100%;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label>Ora (24H):</label>
+                    <input type="time" id="scheduler-time" name="time" class="form-input" style="width:100%;" required pattern="^([01]\d|2[0-3]):([0-5]\d)$">
+                    <span id="scheduler-time-error" style="color:#ef4444;font-size:0.95em;display:none;"></span>
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label>Discord user ID (pentru notificări):</label>
+                    <input type="text" id="scheduler-discord" name="discord_user_id" class="form-input" style="width:100%;" placeholder="ex: 123456789012345678">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;">
+                    <button type="button" class="btn btn-secondary" id="scheduler-cancel">Anulează</button>
+                    <button type="submit" class="btn btn-primary">Salvează</button>
+                </div>
+            </form>
+            <button id="scheduler-close" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; color:#64748b; cursor:pointer;">&times;</button>
+        </div>
+    </div>
+
     <script>
         // Optimizare: încărcare asincronă produse, paginare, filtre, bulk delete, export CSV
         let currentPage = 1;
@@ -837,6 +996,7 @@
         let lastOrderBy = 'id', reversed = false;
         const API_BASE = 'http://127.0.0.1:8000';
         let scrapingInProgress = false;
+        let notifyPrice = true;
 
         let scrapeSettings = {
             min_price: '',
@@ -1011,6 +1171,68 @@
                 window._selectedSiteIdx = null;
                 renderSiteList();
             };
+
+            // Scheduler modal logic
+            document.getElementById('open-scheduler-btn').onclick = async function() {
+                document.getElementById('scheduler-modal').style.display = 'block';
+                document.getElementById('scheduler-form').reset();
+                document.getElementById('scheduler-time-error').style.display = 'none';
+
+                const requestRept = await fetch(`${API_BASE}/get_schedule_data`, {method: 'GET'});
+                const data = await requestRept.json();
+                document.getElementById('scheduler-query').value = data.query;
+                document.getElementById('scheduler-time').value = data.time;
+                console.log(data.discord_id);
+                document.getElementById('scheduler-discord').value = data.discord_id;
+            };
+            document.getElementById('scheduler-close').onclick = function() {
+                document.getElementById('scheduler-modal').style.display = 'none';
+            };
+            document.getElementById('scheduler-cancel').onclick = function() {
+                document.getElementById('scheduler-modal').style.display = 'none';
+            };
+
+            document.getElementById('scheduler-form').onsubmit = async function(e) {
+                e.preventDefault();
+                const timeInput = document.getElementById('scheduler-time');
+                const timeError = document.getElementById('scheduler-time-error');
+                const timeVal = timeInput.value;
+                // Validare 24H
+                if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(timeVal)) {
+                    timeError.textContent = 'Ora trebuie să fie în format 24H (ex: 08:30 sau 23:59)';
+                    timeError.style.display = 'block';
+                    timeInput.focus();
+                    return false;
+                }
+                timeError.style.display = 'none';
+                // Exemplu: aici poți salva datele sau trimite la backend
+                const query = document.getElementById('scheduler-query').value;
+                const time = timeVal;
+                const discordUserId = document.getElementById('scheduler-discord').value;
+                await fetch(`${API_BASE}/delete_schedule`, {method: 'POST'});
+                if(query != '')
+                    await fetch(`${API_BASE}/add_schedule?query=${query}&time=${time}&discord_id=${discordUserId}`, {method: 'POST'});
+                // TODO: trimite la backend dacă vrei
+                document.getElementById('scheduler-modal').style.display = 'none';
+                showAlert('success', 'Scheduler salvat!');
+            };
+
+            document.getElementById('bulk-track-btn').onclick = async function() {
+                const btn = document.getElementById('bulk-track-btn');
+                let selected_ids = [];
+                selectedProducts.forEach(id => selected_ids.push(id));
+                if(notifyPrice)
+                    await fetch(`${API_BASE}/add_watch_products`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({numbers: selected_ids}) });
+                else
+                    await fetch(`${API_BASE}/delete_watch_products`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({numbers: selected_ids}) });
+                notifyPrice = !notifyPrice;
+                if(notifyPrice) {
+                    btn.innerHTML = `<i class="fas fa-eye"></i> Urmareste pretul`;
+                }
+                else {
+                    btn.innerHTML = `<i class="fas fa-eye"></i> Nu mai urmari pretul`;
+                }
+            };
         }
 
         async function loadProducts() {
@@ -1114,10 +1336,45 @@
             const bulkActions = document.getElementById('bulk-actions');
             const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
             const selectedCount = document.getElementById('selected-count');
+            const bulkTrackBtn = document.getElementById('bulk-track-btn');
             selectedCount.textContent = selectedProducts.size;
             bulkDeleteBtn.disabled = selectedProducts.size === 0;
-            if (selectedProducts.size > 0) bulkActions.classList.add('active');
-            else bulkActions.classList.remove('active');
+            // Afișează/ascunde butonul de urmărire preț
+            if(!notifyPrice)
+                bulkTrackBtn.innerHTML = `<i class="fas fa-eye"></i> Urmareste pretul`;
+            notifyPrice = true;
+            if (selectedProducts.size > 0) {
+                bulkActions.classList.add('active');
+                bulkTrackBtn.style.display = 'inline-flex';
+            } else {
+                bulkActions.classList.remove('active');
+                bulkTrackBtn.style.display = 'none';
+            }
+        }
+
+        // Funcție pentru urmărirea prețului produselor selectate
+        async function handleTrackSelected() {
+            if (selectedProducts.size === 0) return;
+            showLoading();
+            try {
+                let selected_ids = Array.from(selectedProducts);
+                // Exemplu: trimite la backend pentru urmărire preț
+                let resp = await fetch(`${API_BASE}/products/track`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({numbers: selected_ids})
+                });
+                let data = await resp.json();
+                if (data.ok) {
+                    showAlert('success', `${selected_ids.length} produse au fost adăugate la urmărire!`);
+                } else {
+                    showAlert('error', data.error || 'Eroare la urmărire');
+                }
+            } catch (error) {
+                showAlert('error', 'Eroare la urmărire: ' + error.message);
+            } finally {
+                hideLoading();
+            }
         }
 
         function handleFilter(event) {
@@ -1467,21 +1724,6 @@
             } else {
                 selectAll.checked = false;
                 selectAll.indeterminate = true;
-            }
-        }
-
-        function updateBulkActions() {
-            const bulkActions = document.getElementById('bulk-actions');
-            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
-            const selectedCount = document.getElementById('selected-count');
-            
-            selectedCount.textContent = selectedProducts.size;
-            bulkDeleteBtn.disabled = selectedProducts.size === 0;
-            
-            if (selectedProducts.size > 0) {
-                bulkActions.classList.add('active');
-            } else {
-                bulkActions.classList.remove('active');
             }
         }
 

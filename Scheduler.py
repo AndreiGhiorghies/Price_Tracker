@@ -39,10 +39,11 @@ def task_exists(task_name: str) -> bool:
     # schtasks /Query returnează 0 dacă găsește taskul
     return rc == 0
 
-def create_task(task_name: str,
-                script_path: str,
-                run_time: str,
-                scrape_query: str):
+def create_task(run_time: str,
+                scrape_query: str,
+                task_name: str = "Price_tracker",
+                script_path: str = os.path.dirname(os.path.abspath(__file__)) + "\\SchedulerStarter.py"
+):
 
     if task_exists(task_name):
         print(f"[warn] Task '{task_name}' există deja.")
@@ -81,7 +82,7 @@ def create_task(task_name: str,
             print("stderr:", err)
         return False
 
-def delete_task(task_name: str) -> bool:
+def delete_task(task_name: str = "Price_tracker") -> bool:
     if not task_exists(task_name):
         print(f"[warn] Task '{task_name}' nu pare să existe.")
         return False

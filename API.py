@@ -524,5 +524,87 @@ async def export_xlsx(q: Optional[str] = Query(None, description="Queri-ul de la
 
     return FileResponse(xlsx_path, media_type="application/pdf", filename="products.xlsx")
 
+@APP.post("/delete_schedule")
+async def delete_schedule():
+    with open("config.json", "r") as f:
+        config = json.load(f)
+
+    config["schedule_query"] = ""
+
+    with open("config.json", "w") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+
+    from Scheduler import delete_task
+
+    delete_task()
+
+@APP.post("/add_schedule")
+async def add_schedule(query: str = Query(None), time: str = Query(None), discord_id: str = Query(None)):
+    config_path = "config.json"
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    config["discord_user_id"] = discord_id
+
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+    
+    from Scheduler import create_task
+
+    create_task(run_time=time, scrape_query=query)
+
+@APP.get("/get_schedule_data")
+async def get_schedule_data():
+    config_path = "config.json"
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    return {
+        "query": config["schedule_query"],
+        "time": config["schedule_time"],
+        "discord_id": config["discord_user_id"]
+    }
+
+@APP.post("/add_watch_products")
+async def add_watch_products(
+                        ids: NumbersRequest,
+                        max_price: Optional[str] = Query(None),
+                        db: aiosqlite.Connection = Depends(get_db)
+):
+    for id in ids.numbers:
+        print(id)
+        async with db.execute("""SELECT COUNT(*) FROM scheduler WHERE product_id = ?""", (id,)) as cur:
+            row = await cur.fetchall()
+
+        if row[0][0] != 0:
+            continue
+
+        if max_price is None:
+            async with db.execute("""
+                SELECT last_price
+                FROM products
+                WHERE id = ?
+            """, (id,)) as cur:
+                rows = await cur.fetchall()
+            price = rows[0][0]
+        else:
+            price = max_price
+        print("DA ", price)
+        
+        await db.execute("""
+                INSERT INTO scheduler(product_id, max_price) VALUES(?, ?) 
+        """, (id, price,))
+
+        await db.commit()
+
+@APP.post("/delete_watch_products")
+async def delete_watch_products(
+                        ids: NumbersRequest,
+                        db: aiosqlite.Connection = Depends(get_db)
+):
+    q_marks = ','.join(['?'] * len(ids.numbers))
+    await db.execute(f"DELETE FROM scheduler WHERE product_id IN ({q_marks})", ids.numbers) 
+
+    await db.commit()
 
 # python -m uvicorn API:APP --reload --host 0.0.0.0 --port 8000

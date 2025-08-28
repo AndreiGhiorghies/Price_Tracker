@@ -33,6 +33,9 @@ def _build_message(products: List[Tuple[str, float]]) -> str:
     return "\n".join(lines)
 
 def send_discord_alert_dm(products: List[Tuple[str, float]], token: str, user_id: Union[int, str]):
+    if user_id is None or user_id == '':
+        return
+    
     try:
         user_id = int(user_id)
     except Exception:

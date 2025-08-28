@@ -1,5 +1,5 @@
 .vs/
 .vscode/
-.__pycache__/
+__pycache__/
 app.py
 .env

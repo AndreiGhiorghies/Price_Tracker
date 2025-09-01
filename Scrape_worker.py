@@ -1,6 +1,8 @@
 import sys
-from Scraper import Filters, Scraper
 import json
+import asyncio
+
+from Scraper import Filters, Scraper
 
 if __name__ == "__main__":
     query = sys.argv[1]
@@ -21,5 +23,4 @@ if __name__ == "__main__":
     filter = Filters(min_price, max_price, min_rating, min_ratings)
     scraper = Scraper(config_path)
     
-    import asyncio
     asyncio.run(scraper.RunScrap(query, filter, min_hours_update))

@@ -1,19 +1,16 @@
-# api.py
-from fastapi import FastAPI, HTTPException, Query, Depends, Body
-from pydantic import BaseModel
-from typing import Optional, List
 import aiosqlite
-import asyncio
 import json
 
-from Database import database_initialized, init_db, DB_PATH
 from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import FastAPI, HTTPException, Query, Depends, Body
+from fastapi.middleware.cors import CORSMiddleware
+from Database import database_initialized, init_db, DB_PATH, CONFIG_PATH
+from pydantic import BaseModel
+from typing import Optional, List
 
-#DB_PATH = "tracker.db"
 APP = FastAPI(title="Price Tracker API")
 scrape_process = None
 
-from fastapi.middleware.cors import CORSMiddleware
 APP.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,13 +18,12 @@ APP.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------- util / startup ----------
 async def get_db():
     if not database_initialized:
         await init_db(DB_PATH)
     
     db = await aiosqlite.connect(DB_PATH)
-    # return rows as tuples; we'll map manually
+
     try:
         yield db
     finally:
@@ -38,7 +34,9 @@ async def on_startup():
     if not database_initialized:
         await init_db(DB_PATH)
 
-# ---------- Pydantic models ----------
+class NumbersRequest(BaseModel):
+    numbers: List[int]
+
 class ProductOut(BaseModel):
     id: int
     site_name: str
@@ -64,7 +62,6 @@ class ProductsList(BaseModel):
     per_page: int
     items: List[ProductOut]
 
-# ---------- helpers ----------
 def row_to_product(row) -> ProductOut:
     # row order must match the SELECT below
     return ProductOut(
@@ -161,9 +158,11 @@ async def get_product(product_id: int, db: aiosqlite.Connection = Depends(get_db
     return row_to_product(row)
 
 @APP.get("/products/{product_id}/history", response_model=List[PricePoint])
-async def get_price_history(product_id: int,
-                            limit: int = Query(200, ge=1, le=2000),
-                            db: aiosqlite.Connection = Depends(get_db)):
+async def get_price_history(
+    product_id: int,
+    limit: int = Query(200, ge=1, le=2000),
+    db: aiosqlite.Connection = Depends(get_db)
+):
     async with db.execute("""
         SELECT id, product_id, price_minor, captured_at
         FROM price_history
@@ -172,45 +171,39 @@ async def get_price_history(product_id: int,
         LIMIT ?
     """, (product_id, limit)) as cur:
         rows = await cur.fetchall()
+    
     return [row_to_price(r) for r in rows]
 
 @APP.post("/scrape/trigger")
-async def trigger_scrape(query: Optional[str] = Query(None, description="Introduci query-ul: "),
-                         db: aiosqlite.Connection = Depends(get_db)):
-    config_path = "config.json"
-    
+async def trigger_scrape(query: Optional[str] = Query(None, description="Introduci query-ul: ")):
     cmd = ["python", "scrape_worker.py",
             query or "",
-            config_path]
+            CONFIG_PATH]
     
     import subprocess
 
     global scrape_process
-    scrape_process = subprocess.Popen(cmd,
-                        stderr=subprocess.PIPE,
-                        text=True)
+    scrape_process = subprocess.Popen(cmd, stderr=subprocess.PIPE, text=True)
 
     return {"ok": True}
 
 @APP.get("/scrape/status")
 def scrape_status():
     global scrape_process
+
     if scrape_process is None:
         return {"status": "idle"}
     elif scrape_process.poll() is None:
         return {"status": "in_progress"}
     else:
-        config_path = "config.json"
         try:
-            with open(config_path, "r", encoding="utf-8") as f:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 config = json.load(f)
         except Exception:
             config = {}
+        
         scrape_process = None
         return {"status": "done", "len_products": config["nr_changed_products"]}
-
-class NumbersRequest(BaseModel):
-    numbers: List[int]
 
 @APP.post("/products/bulk_delete")
 async def bulk_delete_products(
@@ -248,15 +241,12 @@ async def change_config(
     min_rating: Optional[str] = Query(None, description="Minimum rating of the products"),
     min_rating_number: Optional[str] = Query(None, description="Minimum number of ratings of the products"),
 ):
-    config_path = "config.json"
-    # Citește config-ul existent
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
     except Exception:
         config = {}
 
-    # Actualizează valorile dacă sunt trimise
     if min_price is not None:
         config["configuration"]["min_price"] = min_price
     if max_price is not None:
@@ -266,18 +256,15 @@ async def change_config(
     if min_rating_number is not None:
         config["configuration"]["min_ratings"] = min_rating_number
 
-    # Scrie config-ul modificat
-    with open(config_path, "w", encoding="utf-8") as f:
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
     return {"ok": True}
 
 @APP.post("/get_config")
 async def get_config():
-    config_path = "config.json"
-    # Citește config-ul existent
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
     except Exception:
         config = {}
@@ -289,11 +276,9 @@ async def get_config():
 
 @APP.get("/get_site_settings")
 async def get_site_settings(index: Optional[str] = Query(None, description="Indexul site-ului")):
-    
-    config_path = "config.json"
     idx = int(index if index is not None else "0")
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
     except Exception:
         config = {}
@@ -332,10 +317,9 @@ async def set_site_settings(
     end_of_pages: Optional[str] = Query(None, description="Sfarsitul paginilor cu produse"),
 ):
     
-    config_path = "config.json"
     idx = int(index if index is not None else "0")
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
     except Exception:
         config = {}
@@ -373,15 +357,13 @@ async def set_site_settings(
     config["sites"][idx]["selectors"]["remove_items_with"] = remove_items_with if remove_items_with else ""
     config["sites"][idx]["selectors"]["end_of_pages"] = end_of_pages if end_of_pages else ""
 
-    with open(config_path, "w", encoding="utf-8") as f:
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
 @APP.get("/get_site_number")
-async def get_site_number():
-    
-    config_path = "config.json"
+async def get_site_number():    
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
     except Exception:
         config = {}
@@ -398,10 +380,8 @@ async def delete_site(index: Optional[str] = Query(None, description="Indexul si
     except Exception:
         return
     
-    
-    config_path = "config.json"
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
     except Exception:
         return
@@ -411,13 +391,17 @@ async def delete_site(index: Optional[str] = Query(None, description="Indexul si
 
     del config["sites"][idx]
 
-    with open(config_path, "w", encoding="utf-8") as f:
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
 @APP.get("/product_image")
-async def get_product_image(product_id: Optional[str] = Query(0, description="Id produsului"), db: aiosqlite.Connection = Depends(get_db)):
+async def get_product_image(
+    product_id: Optional[str] = Query(0, description="Id produsului"), 
+    db: aiosqlite.Connection = Depends(get_db)
+):
     async with db.execute("""SELECT image_link FROM products WHERE id = ?""", (str(product_id),)) as cur:
         row = await cur.fetchone()
+    
     return row[0] if row else ""
 
 @APP.get("/export_csv")
@@ -428,16 +412,19 @@ async def export_csv(
 ):
     import io
     import csv
-    # Folosește explicit db din Depends pentru list_products
+
     resp = await list_products(q=q, site=site, per_page=-1, page=1, order_by='id', reversed=False, db=db, min_price=None, max_price=None)
     items = resp.items if resp else None
+
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["id","site_name","external_id","title","link","currency","last_price","rating","ratings_count","first_seen_at","last_seen_at"])
+    
     if items:
         for r in items:
             writer.writerow([r.id, r.site_name, r.external_id, r.title, r.link, r.currency, r.last_price, r.rating, r.ratings_count, r.first_seen_at, r.last_seen_at])
     output.seek(0)
+
     return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=products.csv"})
 
 @APP.get("/export_pdf")
@@ -461,29 +448,32 @@ async def export_pdf(
     width, height = A4
     x, y = 40, height - 40
     line_height = 18
-    max_width = width - 80  # margini
+    max_width = width - 80
 
     if items:
-        # Extrage dict din Pydantic model
         keys = list(items[0].dict().keys())
+
         c.setFont("Helvetica-Bold", 12)
         header_text = " | ".join(keys)
         header_lines = simpleSplit(header_text, "Helvetica-Bold", 12, max_width)
+
         for line in header_lines:
             c.drawString(x, y, line)
             y -= line_height
+        
         c.setFont("Helvetica", 10)
         for item in items:
             item_dict = item.dict()
             line = " | ".join(str(item_dict.get(k, "")) for k in keys)
             lines = simpleSplit(line, "Helvetica", 10, max_width)
+
             for l in lines:
                 c.drawString(x, y, l)
                 y -= line_height
                 if y < 40:
                     c.showPage()
                     y = height - 40
-            # empty line between items
+
             y -= line_height
             if y < 40:
                 c.showPage()
@@ -505,7 +495,6 @@ async def export_xlsx(q: Optional[str] = Query(None, description="Queri-ul de la
     resp = await list_products(q=q, site=site, per_page=-1, page=1, order_by='id', reversed=False, db=db, min_price=None, max_price=None)
     items = resp.items if resp else None
 
-    # Creează fișier Excel temporar
     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
         xlsx_path = tmp.name
 
@@ -516,6 +505,7 @@ async def export_xlsx(q: Optional[str] = Query(None, description="Queri-ul de la
         keys = list(items[0].dict().keys())
         for col, key in enumerate(keys):
             worksheet.write(0, col, key)
+        
         for row, item in enumerate(items, start=1):
             for col, key in enumerate(keys):
                 item_dict = item.dict()
@@ -526,12 +516,12 @@ async def export_xlsx(q: Optional[str] = Query(None, description="Queri-ul de la
 
 @APP.post("/delete_schedule")
 async def delete_schedule():
-    with open("config.json", "r") as f:
+    with open(CONFIG_PATH, "r") as f:
         config = json.load(f)
 
     config["schedule_query"] = ""
 
-    with open("config.json", "w") as f:
+    with open(CONFIG_PATH, "w") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
     from Scheduler import delete_task
@@ -540,13 +530,12 @@ async def delete_schedule():
 
 @APP.post("/add_schedule")
 async def add_schedule(query: str = Query(None), time: str = Query(None), discord_id: str = Query(None)):
-    config_path = "config.json"
-    with open(config_path, "r") as f:
+    with open(CONFIG_PATH, "r") as f:
         config = json.load(f)
 
     config["discord_user_id"] = discord_id
 
-    with open(config_path, "w", encoding="utf-8") as f:
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
     
     from Scheduler import create_task
@@ -555,8 +544,7 @@ async def add_schedule(query: str = Query(None), time: str = Query(None), discor
 
 @APP.get("/get_schedule_data")
 async def get_schedule_data():
-    config_path = "config.json"
-    with open(config_path, "r") as f:
+    with open(CONFIG_PATH, "r") as f:
         config = json.load(f)
 
     return {
@@ -567,44 +555,58 @@ async def get_schedule_data():
 
 @APP.post("/add_watch_products")
 async def add_watch_products(
-                        ids: NumbersRequest,
-                        max_price: Optional[str] = Query(None),
-                        db: aiosqlite.Connection = Depends(get_db)
+    ids: NumbersRequest,
+    max_price: Optional[str] = Query(None),
+    db: aiosqlite.Connection = Depends(get_db)
 ):
-    for id in ids.numbers:
-        print(id)
-        async with db.execute("""SELECT COUNT(*) FROM scheduler WHERE product_id = ?""", (id,)) as cur:
-            row = await cur.fetchall()
+    q_marks = ','.join(['?'] * len(ids.numbers))
+    if max_price is not None:
+        await db.execute(f"UPDATE products SET watch_price = 1 watch_max_price = {max_price} WHERE id IN ({q_marks})", ids.numbers)
+    else:
+        await db.execute(f"UPDATE products SET watch_price = 1 WHERE id IN ({q_marks})", ids.numbers)
 
-        if row[0][0] != 0:
-            continue
-
-        if max_price is None:
-            async with db.execute("""
-                SELECT last_price
-                FROM products
-                WHERE id = ?
-            """, (id,)) as cur:
-                rows = await cur.fetchall()
-            price = rows[0][0]
-        else:
-            price = max_price
-        print("DA ", price)
-        
-        await db.execute("""
-                INSERT INTO scheduler(product_id, max_price) VALUES(?, ?) 
-        """, (id, price,))
-
-        await db.commit()
+    await db.commit()
 
 @APP.post("/delete_watch_products")
 async def delete_watch_products(
-                        ids: NumbersRequest,
-                        db: aiosqlite.Connection = Depends(get_db)
+    ids: NumbersRequest,
+    db: aiosqlite.Connection = Depends(get_db)
 ):
     q_marks = ','.join(['?'] * len(ids.numbers))
-    await db.execute(f"DELETE FROM scheduler WHERE product_id IN ({q_marks})", ids.numbers) 
+    await db.execute(f"UPDATE products SET watch_price = 0 WHERE id IN ({q_marks})", ids.numbers) 
 
     await db.commit()
+
+@APP.get("/is_product_tracked")
+async def is_product_tracked(
+    id: str = Query(None),
+    db: aiosqlite.Connection = Depends(get_db)
+):
+    async with db.execute("""
+        SELECT watch_price, watch_max_price
+        FROM products
+        WHERE id = ?
+    """, (int(id),)) as cur:
+        row = await cur.fetchone()
+
+    return { "tracked": row[0] == 1 if row else False, "max_price": row[1] if row else 0 }
+
+@APP.post("/set_notify_price")
+async def set_notify_price(
+    id: str = Query(None),
+    new_max_price: str = Query(None),
+    db: aiosqlite.Connection = Depends(get_db)
+):
+    await db.execute("UPDATE products SET watch_max_price = ? WHERE id = ?", (new_max_price, id))
+    await db.commit()
+
+    return {"ok": True}
+
+@APP.get("/total_products")
+async def get_total_products(db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute("SELECT COUNT(*) FROM products") as cur:
+        row = await cur.fetchone()
+
+    return {"total": row[0] if row else 0}
 
 # python -m uvicorn API:APP --reload --host 0.0.0.0 --port 8000

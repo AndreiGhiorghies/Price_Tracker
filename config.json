@@ -52,6 +52,23 @@
         "remove_items_with": "",
         "end_of_pages": ".my-4"
       }
+    },
+    {
+      "name": "Nume nou site",
+      "url": "",
+      "url_searchTemplate": "",
+      "selectors": {
+        "product": "",
+        "title": "",
+        "link": "",
+        "price": "",
+        "currency": "",
+        "rating": "",
+        "id": "",
+        "image_link": "",
+        "remove_items_with": "",
+        "end_of_pages": ""
+      }
     }
   ],
   "configuration": {
@@ -61,8 +78,8 @@
     "min_ratings": "0",
     "min_hours_update": "0"
   },
-  "nr_changed_products": "16",
-  "schedule_time": "20:20",
+  "nr_changed_products": "17",
+  "schedule_time": "19:55",
   "schedule_query": "",
   "discord_user_id": "721389952105185310"
 }

@@ -2,881 +2,128 @@
 <html lang="ro">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title></title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <style>
-    :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --secondary: #64748b;
-            --light: #f8fafc;
-            --dark: #0f172a;
-            --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      min-height: 100vh;
-      line-height: 1.6;
-    }
-
-    .container {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 2rem 1rem;
-    }
-
-    .product-card {
-      background: rgba(255, 255, 255, 0.97);
-      border-radius: 22px;
-      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.07);
-      border: 1px solid #e2e8f0;
-      padding: 2rem 1.5rem 1.5rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
-
-    .product-image {
-      width: 240px;
-      height: 240px;
-      object-fit: contain;
-      border-radius: 18px;
-      background: #f3f4f6;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-      border: 1px solid #e2e8f0;
-      margin-bottom: 1.2rem;
-      display: block;
-    }
-
-    .card-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.7rem;
-      text-align: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .product-details-list {
-      width: 100%;
-      margin-bottom: 1.2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.7rem;
-      align-items: center;
-    }
-
-    .product-details-list p {
-      margin: 0;
-      font-size: 1.07rem;
-      text-align: center;
-    }
-
-    .site-badge {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin-left: 0.3em;
-      display: inline-block;
-    }
-
-    .price {
-      font-weight: 700;
-      color: #10b981;
-      font-size: 1.1rem;
-      display: inline-block;
-    }
-
-    .rating {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      justify-content: center;
-    }
-
-    .open-link-btn {
-      width: 100%;
-      background: linear-gradient(135deg, #6366f1, #764ba2);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      padding: 0.9rem 0;
-      font-weight: 600;
-      font-size: 1.08rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.7rem;
-      box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.08);
-      transition: background 0.2s, box-shadow 0.2s;
-      margin-top: 1.1rem;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .open-link-btn:hover {
-      background: linear-gradient(135deg, #4f46e5, #764ba2);
-      box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.12);
-    }
-
-    .btn-link {
-      background: none;
-      color: #6366f1;
-      font-weight: 600;
-      border: none;
-      padding: 0.5rem 0;
-      text-decoration: none;
-      margin-bottom: 1rem;
-      display: inline-block;
-    }
-    .btn-delete {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 50px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-    .btn-danger {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: white;
-    }
-
-    .btn-danger:disabled {
-        background: #94a3b8;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .card {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      border: 1px solid #e2e8f0;
-      margin-bottom: 2rem;
-      overflow: hidden;
-    }
-
-    .card-header {
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      font-weight: 600;
-      color: #0f172a;
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 1.1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.2em;
-      position: relative;
-      z-index: 2;
-    }
-    .card-body {
-      padding: 1.5rem;
-      padding-bottom: 0;
-    }
-
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 0;
-    }
-
-    .table th,
-    .table td {
-      padding: 0.8rem;
-      border-bottom: 1px solid #e2e8f0;
-      vertical-align: middle;
-      text-align: left;
-    }
-
-    .table thead {
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-    }
-
-    .text-muted {
-      color: #64748b;
-    }
-
-    .stars i,
-    .stars .fa-star,
-    .stars .fa-star-half-alt,
-    .stars .fa-star-o,
-    .stars .far,
-    .stars .fas {
-      color: #f59e0b !important;
-      /* For increased specificity */
-      filter: none !important;
-      opacity: 1 !important;
-      -webkit-text-stroke: 0 !important;
-    }
-
-    .price-up {
-      color: #ef4444;
-      font-weight: bold;
-    }
-
-    .price-down,
-    .price-first {
-      color: #10b981;
-      font-weight: bold;
-    }
-
-    .history-table-section {
-      width: 100%;
-      overflow-x: auto;
-      padding: 0;
-      margin: 0;
-    }
-
-    .history-table-section .table {
-      min-width: 420px;
-      width: 100%;
-    }
-
-    .alert {
-      padding: 1rem 1.5rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      display: none;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .alert.success {
-      background: rgba(16, 185, 129, 0.1);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .alert.error {
-      background: rgba(239, 68, 68, 0.1);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 50px;
-      font-weight: 600;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 0.9rem;
-    }
-
-    /* .btn-secondary {
-      background: #f3f4f6;
-      color: #64748b;
-      border: 1.5px solid #e2e8f0;
-      box-shadow: 0 2px 8px rgba(100,116,139,0.04);
-    }
-
-    .btn-secondary:hover {
-      background: #e2e8f0;
-      color: #6366f1;
-    } */
-
-    /* .btn-danger {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: white;
-      box-shadow: 0 2px 8px rgba(239,68,68,0.08);
-    }
-
-    .btn-danger:hover {
-      background: linear-gradient(135deg, #dc2626, #ef4444);
-      color: white;
-    } */
-
-    .history-pagination {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 1em 1.5em 1em 1.5em;
-      background: rgba(248, 250, 252, 0.8);
-      border-radius: 0 0 20px 20px;
-      margin-top: 0;
-    }
-    .history-page-btn {
-      padding: 0.5rem 1rem;
-      border: 2px solid var(--border);
-      background: white;
-      border-radius: 8px;
-      text-decoration: none;
-      color: var(--secondary);
-      transition: all 0.2s ease;
-      font-weight: 500;
-      font-size: 1em;
-      cursor: pointer;
-    }
-    .history-page-btn:hover:not(.disabled) {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .history-page-btn.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .history-page-info {
-      background: var(--gradient);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 1em;
-    }
-    .history-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.2em 1.5em 1.2em 1.5em;
-      padding-top: 0.1rem;
-      padding-bottom: 0.2rem;
-      padding-right: 0.5rem;
-      background: rgba(248, 250, 252, 0.8);
-      /* border-top: 1px solid var(--border); */
-      border-radius: 0 0 20px 20px;
-      font-size: 1em;
-      color: var(--secondary);
-      font-weight: 500;
-      margin-top: 0;
-    }
-    .history-toggle-switch {
-  display: flex;
-  align-items: center;
-  background: #f3f4f6;
-  border-radius: 999px;
-  border: 1.5px solid var(--border);
-  width: 56px;
-  height: 32px;
-  position: relative;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  margin-left: 0.5em;
-  margin-right: 0;
-  flex-shrink: 0;
-  overflow: hidden;
-  padding: 0 4px;
-}
-.history-toggle-icon {
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  opacity: 0.7;
-  z-index: 1;
-  transition: color 0.2s, opacity 0.2s;
-  margin: 0 2px;
-}
-.history-toggle-switch .icon-tabel {
-  margin-left: 2px;
-  margin-right: 6px;
-}
-.history-toggle-switch .icon-grafic {
-  margin-left: 6px;
-  margin-right: 2px;
-}
-.history-toggle-knob {
-  position: absolute;
-  top: 3px;
-  left: 5px;
-  width: 28px;
-  height: 26px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(100,116,139,0.07);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.15em;
-  color: var(--primary);
-  transition: left 0.22s cubic-bezier(.4,1.3,.5,1), background 0.2s, color 0.2s;
-  z-index: 2;
-}
-.history-toggle-switch.grafic .history-toggle-knob {
-  left: 32px;
-  background: var(--primary);
-  color: #fff;
-}
-/* Hide inactive icon under knob */
-.history-toggle-switch.tabel .icon-grafic {
-  opacity: 0.3;
-}
-.history-toggle-switch.grafic .icon-tabel {
-  opacity: 0.3;
-}
-    @media (max-width: 600px) {
-      .container {
-        padding: 0.5rem;
-      }
-
-      .product-card {
-        padding: 1rem 0.5rem;
-      }
-
-      .product-image {
-        width: 100%;
-        max-width: 320px;
-        height: auto;
-      }
-      .history-footer {
-        flex-direction: column;
-        gap: 0.7em;
-        padding: 1em 0.7em;
-      }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title></title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="../Frontend/CSS/product_style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 
 <body>
-  <div class="container">
-    <a href="#" onclick="window.history.back(); return false;" class="btn btn-link"><i class="fas fa-arrow-left"></i> Înapoi
-    </a>
-    <div id="product-card" class="product-card" style="display:none;">
-      <!-- Detalii produs vor fi populate dinamic -->
-    </div>
-    <div id="history-card" class="card" style="display:flex; flex-direction:column; position: relative; width: 150%; right: 25%;">
-      <div class="card-header">
-        <span style="display:flex;align-items:center;gap:0.7em;">
-          <i class="fas fa-history"></i> Istoric preț
-        </span>
-        <div style="display:flex;align-items:center;">
-          <div id="toggle-history-switch" class="history-toggle-switch tabel" title="Comută tabel/grafic">
-            <span class="history-toggle-icon icon-tabel"><i class="fas fa-table"></i></span>
-            <span class="history-toggle-icon icon-grafic"><i class="fas fa-chart-line"></i></span>
-            <span class="history-toggle-knob"><i class="fas fa-table"></i></span>
-          </div>
-        </div>
-      </div>
-      <div class="card-body p-0" id="history-table-container">
-        <!-- Tabelul istoric va fi populat dinamic -->
-      </div>
-      <div id="history-footer" class="history-footer" style="display:none;">
-        <div>
-          Total: <strong id="history-total"></strong> înregistrări
-        </div>
-        <div id="history-pagination" class="history-pagination" style="display:none;"></div>
-      </div>
-      <div id="history-chart-container" style="width:94%;padding:1.5rem 1.5rem 1.5rem 1.5rem;display:none;">
-        <canvas id="priceChart" style="width:100%;max-width:100%;height:220px;display:block;"></canvas>
-      </div>
-    </div>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  <script>
-    const API_URL = "http://127.0.0.1:8000";
-
-    function getProductIdFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('product_id');
-    }
-
-    async function fetchProduct(productId) {
-      const resp = await fetch(`${API_URL}/products/${productId}`);
-      if (!resp.ok) return null;
-      return await resp.json();
-    }
-
-    async function fetchHistory(productId) {
-      const resp = await fetch(`${API_URL}/products/${productId}/history`);
-      if (!resp.ok) return [];
-      return await resp.json();
-    }
-
-    async function fetchProductImage(productId) {
-      const resp = await fetch(`${API_URL}/product_image?product_id=${productId}`);
-      if (!resp.ok) return "";
-      return await resp.text();
-    }
-
-    function renderStars(rating) {
-      if (!rating) return '<span>-</span>';
-      let html = '<span class="stars">';
-      for (let i = 1; i <= 5; i++) {
-        if (rating >= i) html += '<i class="fas fa-star stars"></i>';
-        else if (rating >= i - 0.5) html += '<i class="fas fa-star-half-alt stars"></i>';
-        else html += '<i class="far fa-star stars"></i>';
-      }
-      html += '</span>';
-      return html;
-    }
-
-    function renderProduct(product, imageUrl) {
-      document.title = product.title;
-      const card = document.getElementById('product-card');
-      card.innerHTML = `
-        <img src=${imageUrl} alt="Imagine produs" class="product-image">
-        <div class="card-title">${product.title}</div>
-        <div class="product-details-list">
-          <p><strong>Site:</strong> <span class="site-badge">${product.site_name}</span></p>
-          <p><strong>Preţ curent:</strong> <span class="price">${product.currency || ''} ${product.last_price !== null ? product.last_price : '-'}</span></p>
-          <p class="rating"><strong>Rating:</strong> ${renderStars(product.rating)} <span>${product.rating !== null ? product.rating : '-'}</span> ${product.ratings_count ? `<span class="text-muted">(${product.ratings_count})</span>` : ''}</p>
-        </div>
-        <a href="${product.link}" target="_blank" class="open-link-btn">
-          <i class="fas fa-external-link-alt"></i> Deschide produsul
-        </a>
-        <button id="delete-product-btn" style="margin-top:1.2em;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:50px;padding:0.7em 1.5em;font-weight:600;font-size:1.05em;cursor:pointer;box-shadow:0 2px 8px rgba(239,68,68,0.08);display:flex;align-items:center;gap:0.7em;">
-          <i class="fas fa-trash"></i> Șterge produsul
-        </button>
-      `;
-      card.style.display = 'flex';
-
-      document.getElementById('delete-product-btn').onclick = function() {
-        document.getElementById('delete-product-modal').style.display = 'block';
-      };
-    }
-
-    let historyDataCache = [];
-    let historyViewMode = 'table'; // 'table' or 'chart'
-    let historyPage = 1;
-    const historyPerPage = 10;
-
-    function renderHistory(history) {
-      historyDataCache = history.slice().reverse();
-      historyPage = 1;
-      // Set total in footer, not in title
-      document.getElementById('history-total').textContent = history.length;
-      updateHistoryView();
-      document.getElementById('history-card').style.display = 'block';
-      document.getElementById('history-footer').style.display = '';
-    }
-
-    function updateHistoryView() {
-      const tableContainer = document.getElementById('history-table-container');
-      const chartContainer = document.getElementById('history-chart-container');
-      const pagContainer = document.getElementById('history-pagination');
-      const footer = document.getElementById('history-footer');
-      const switchDiv = document.getElementById('toggle-history-switch');
-      const knob = switchDiv.querySelector('.history-toggle-knob');
-      if (historyViewMode === 'table') {
-        switchDiv.classList.remove('grafic');
-        switchDiv.classList.add('tabel');
-        knob.innerHTML = '<i class="fas fa-table"></i>';
-        tableContainer.style.display = '';
-        chartContainer.style.display = 'none';
-        pagContainer.style.display = '';
-        footer.style.display = '';
-        renderHistoryTable(historyDataCache);
-        renderHistoryPagination(historyDataCache.length);
-      } else {
-        switchDiv.classList.remove('tabel');
-        switchDiv.classList.add('grafic');
-        knob.innerHTML = '<i class="fas fa-chart-line"></i>';
-        tableContainer.style.display = 'none';
-        chartContainer.style.display = '';
-        pagContainer.style.display = 'none';
-        footer.style.display = 'none';
-        renderPriceChart(historyDataCache);
-      }
-    }
-
-    function renderHistoryTable(history) {
-      if (!history.length) {
-        document.getElementById('history-table-container').innerHTML =
-          '<div class="p-3 text-muted" style="text-align:center;">Niciun istoric</div>';
-        return;
-      }
-      const totalPages = Math.max(1, Math.ceil(history.length / historyPerPage));
-      const startIdx = (historyPage - 1) * historyPerPage;
-      const pageData = history.slice(startIdx, startIdx + historyPerPage);
-
-      let rows = '';
-      pageData.forEach((h, idx) => {
-        let price = h.price_minor !== null ? h.price_minor : null;
-        let percent = '';
-        let priceClass = '';
-        let prevPrice = (startIdx + idx + 1 < history.length) ? history[startIdx + idx + 1].price_minor : null;
-        if (startIdx + idx === history.length - 1) {
-          priceClass = 'price-first';
-          percent = '';
-        } else if (prevPrice !== null && price !== null && prevPrice !== 0) {
-          let delta = price - prevPrice;
-          let pct = ((delta / prevPrice) * 100).toFixed(2);
-          if (delta < 0) {
-            percent = `<span class="price-down">${pct}%</span>`;
-            priceClass = 'price-down';
-          } else if (delta > 0) {
-            percent = `<span class="price-up">+${pct}%</span>`;
-            priceClass = 'price-up';
-          } else {
-            percent = `<span style="color:#64748b;">0%</span>`;
-            priceClass = '';
-          }
-        } else {
-          percent = '';
-          priceClass = '';
-        }
-        rows += `<tr>
-        <td style="width:2.5em;text-align:center;color:#64748b;">${startIdx + idx + 1}</td>
-        <td class="text-muted">${h.captured_at}</td>
-        <td style="text-align:center;" class="${priceClass}">${price !== null ? price : '-'}</td>
-        <td style="text-align:center;">${percent}</td>
-      </tr>`;
-      });
-      document.getElementById('history-table-container').innerHTML = `
-      <div class="history-table-section">
-        <table class="table table-sm mb-0">
-          <thead style="width=100%">
-            <tr>
-              <th style="width:2.5em;text-align:center;">#</th>
-              <th>Data</th>
-              <th style="text-align:center;">Preţ</th>
-              <th style="text-align:center;">Δ %</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `;
-    }
-
-    function renderHistoryPagination(total) {
-      const pag = document.getElementById('history-pagination');
-      pag.innerHTML = '';
-      const totalPages = Math.max(1, Math.ceil(total / historyPerPage));
-      if (totalPages <= 1) return;
-      pag.innerHTML += `<button class="history-page-btn${historyPage === 1 ? ' disabled' : ''}" onclick="changeHistoryPage(-1)" ${historyPage === 1 ? 'disabled' : ''}>&laquo; Prev</button>`;
-      pag.innerHTML += `<span class="history-page-info">${historyPage} / ${totalPages}</span>`;
-      pag.innerHTML += `<button class="history-page-btn${historyPage === totalPages ? ' disabled' : ''}" onclick="changeHistoryPage(1)" ${historyPage === totalPages ? 'disabled' : ''}>Next &raquo;</button>`;
-    }
-
-    window.changeHistoryPage = function(direction) {
-      const totalPages = Math.max(1, Math.ceil(historyDataCache.length / historyPerPage));
-      let newPage = historyPage + direction;
-      if (newPage < 1 || newPage > totalPages) return;
-      historyPage = newPage;
-      renderHistoryTable(historyDataCache);
-      renderHistoryPagination(historyDataCache.length);
-      // Scroll la tabel dacă e pe mobil
-      const table = document.getElementById('history-table-container');
-      if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
-    // Chart.js chart rendering
-    let priceChartInstance = null;
-    function renderPriceChart(history) {
-      history = history.slice().reverse();
-      const canvas = document.getElementById('priceChart');
-      canvas.width = canvas.offsetWidth || 400;
-      canvas.height = 220;
-      const ctx = canvas.getContext('2d');
-      if (priceChartInstance) {
-        priceChartInstance.destroy();
-      }
-      if (!history || history.length === 0) {
-        priceChartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{
-              label: 'Preț',
-              data: [],
-              borderColor: '#6366f1',
-              backgroundColor: 'rgba(99,102,241,0.08)',
-              tension: 0.2,
-              pointRadius: 3,
-              pointBackgroundColor: '#6366f1'
-            }]
-          },
-          options: {
-            plugins: {
-              legend: { display: false }
-            },
-            scales: {
-              x: { display: false },
-              y: { display: false }
-            }
-          }
-        });
-        return;
-      }
-      const labels = history.map(h => h.captured_at);
-      const data = history.map(h => h.price_minor !== null ? h.price_minor : null);
-      priceChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Preț',
-            data: data,
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99,102,241,0.08)',
-            tension: 0.2,
-            pointRadius: 3,
-            pointBackgroundColor: '#6366f1',
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return 'Preț: ' + context.parsed.y;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              display: true,
-              title: { display: false },
-              ticks: {
-                display: false,
-                autoSkip: true,
-                maxTicksLimit: 12,
-                color: '#64748b'
-              }
-            },
-            y: {
-              display: true,
-              title: { display: false },
-              ticks: {
-                color: '#64748b'
-              },
-              beginAtZero: false
-            }
-          }
-        }
-      });
-    }
-
-    (async function () {
-      const productId = getProductIdFromURL();
-      if (!productId) {
-        document.body.innerHTML = '<div style="padding:2em;text-align:center;">Product ID lipsă în URL</div>';
-        return;
-      }
-      const product = await fetchProduct(productId);
-      if (!product) {
-        document.body.innerHTML = '<div style="padding:2em;text-align:center;">Produsul nu a fost găsit</div>';
-        return;
-      }
-      const imageUrl = await fetchProductImage(productId);
-      renderProduct(product, imageUrl);
-      const history = await fetchHistory(productId);
-      renderHistory(history);
-    })();
-
-    // Fix: attach toggle button event after DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      const switchDiv = document.getElementById('toggle-history-switch');
-      if (switchDiv) {
-        switchDiv.onclick = function() {
-          historyViewMode = (historyViewMode === 'table') ? 'chart' : 'table';
-          updateHistoryView();
-        };
-      }
-    });
-  </script>
+<div class="container">
+<a href="#" onclick="window.history.back(); return false;" class="btn btn-link"><i class="fas fa-arrow-left"></i>
+Înapoi
+</a>
+<div id="product-card" class="product-card" style="display:none;">
+<!-- Detalii produs vor fi populate dinamic -->
+</div>
+<div id="history-card" class="card"
+style="display:flex; flex-direction:column; position: relative; width: 150%; right: 25%;">
+<div class="card-header">
+<span style="display:flex;align-items:center;gap:0.7em;">
+<i class="fas fa-history"></i> Istoric preț
+</span>
+<div style="display:flex;align-items:center;">
+<div id="toggle-history-switch" class="history-toggle-switch tabel" title="Comută tabel/grafic">
+<span class="history-toggle-icon icon-tabel"><i class="fas fa-table"></i></span>
+<span class="history-toggle-icon icon-grafic"><i class="fas fa-chart-line"></i></span>
+<span class="history-toggle-knob"><i class="fas fa-table"></i></span>
+</div>
+</div>
+</div>
+<div class="card-body p-0" id="history-table-container">
+<!-- Tabelul istoric va fi populat dinamic -->
+</div>
+<div id="history-footer" class="history-footer" style="display:none;">
+<div>
+Total: <strong id="history-total"></strong> înregistrări
+</div>
+<div id="history-pagination" class="history-pagination" style="display:none;"></div>
+</div>
+<div id="history-chart-container" style="width:94%;padding:1.5rem 1.5rem 1.5rem 1.5rem;display:none;">
+<canvas id="priceChart" style="width:100%;max-width:100%;height:220px;display:block;"></canvas>
+</div>
+</div>
+</div>
+<div id="delete-product-modal"
+style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:3000;">
+<div style="
+background:white;
+max-width:300px;
+margin:120px auto;
+padding:2rem 1.5rem;
+border-radius:15px;
+box-shadow:0 8px 32px rgba(0,0,0,0.18);
+position:relative;
+">
+<h3 style="margin-bottom:1rem; margin-top: 0rem; color:var(--danger); font-size:1.1rem;">Ștergere produs</h3>
+<div style="margin-bottom:1.2rem; color:var(--secondary); font-size:1rem;">
+Sigur vrei să ștergi acest produs?<br>
+<b>Această acțiune este ireversibilă!</b>
+</div>
+<div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+<button type="button" class="btn btn-secondary" id="delete-product-cancel"
+style="padding:0.75rem 1.5rem;font-size:0.9rem;">Anulează</button>
+<button type="button" class="btn btn-danger" id="delete-product-confirm"
+style="padding:0.75rem 1.5rem;font-size:0.9rem;">Șterge</button>
+</div>
+<button id="delete-product-close"
+style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; color:#64748b; cursor:pointer;">&times;</button>
+</div>
+</div>
+<div id="alert-success" class="alert success"
+style="display:none;align-items:center;gap:0.5rem;padding:1rem 1.5rem;border-radius:10px;margin-bottom:1rem;">
+<i class="fas fa-check-circle"></i>
+<span id="success-message"></span>
+</div>
+<div id="alert-error" class="alert error"
+style="display:none;align-items:center;gap:0.5rem;padding:1rem 1.5rem;border-radius:10px;margin-bottom:1rem;">
+<i class="fas fa-exclamation-circle"></i>
+<span id="error-message"></span>
+</div>
+<div id="scheduler-modal"
+style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:4000;">
+<div style="
+background:white;
+max-width:400px;
+margin:40px auto;
+padding:2rem 2rem 1.5rem 2rem;
+border-radius:15px;
+box-shadow:0 8px 32px rgba(0,0,0,0.15);
+position:relative;
+padding-top: 1.5rem;
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+border: 1px solid #e2e8f0;
+">
+<h2
+style="margin-bottom:1rem; font-size:1.25rem; color:var(--primary); font-weight:700; padding-top: 0; margin-top: 15px;">
+Setare notificare preț</h2>
+<form id="scheduler-form">
+<div style="margin-bottom:1.2rem;">
+<label for="notify-price"
+style="font-weight:600; color:var(--secondary); font-size:0.98rem; margin-bottom:0.4em; display:block;">Preț
+maxim notificare:</label>
+<input type="number" min="1" step="1" id="notify-price" name="notify_price" class="form-input"
+style="width:100%;padding:0.75rem 1rem;border:2px solid var(--border);border-radius:10px;outline:none;transition:all 0.3s;background:white;font-size:1.05em;box-sizing:border-box;">
+</div>
+<div style="color:var(--secondary); font-size:1rem; margin-bottom:1rem;">
+Vei primi notificare când prețul produsului scade sub această sumă.
+</div>
+<div style="display:flex; align-items:center; justify-content:flex-end; gap:0.5rem; font-weight: 600;">
+<button type="button" class="btn btn-secondary" id="scheduler-cancel"
+style="padding:0.75rem 1.5rem;font-size:0.9rem;" onclick="closeSchedulerModal()">Anulează</button>
+<button type="submit" class="btn btn-primary btn-schendulePrice-success"
+style="padding:0.75rem 1.5rem;font-size:0.9rem; color:white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">Salvează</button>
+</div>
+</form>
+<button id="scheduler-close"
+style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.5rem; color:#64748b; cursor:pointer;"
+onclick="closeSchedulerModal()">&times;</button>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<script src="../Frontend/JS/product_backend.js"></script>
 </body>
 
 </html>
-<div id="delete-product-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:3000;">
-  <div style="
-    background:white;
-    max-width:300px;
-    margin:120px auto;
-    padding:2rem 1.5rem;
-    border-radius:15px;
-    box-shadow:0 8px 32px rgba(0,0,0,0.18);
-    position:relative;
-    ">
-    <h3 style="margin-bottom:1rem; margin-top: 0rem; color:var(--danger); font-size:1.1rem;">Ștergere produs</h3>
-    <div style="margin-bottom:1.2rem; color:var(--secondary); font-size:1rem;">
-      Sigur vrei să ștergi acest produs?<br>
-      <b>Această acțiune este ireversibilă!</b>
-    </div>
-    <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-      <button type="button" class="btn btn-secondary" id="delete-product-cancel" style="padding:0.75rem 1.5rem;font-size:0.9rem;">Anulează</button>
-      <button type="button" class="btn btn-danger" id="delete-product-confirm" style="padding:0.75rem 1.5rem;font-size:0.9rem;">Șterge</button>
-    </div>
-    <button id="delete-product-close" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; color:#64748b; cursor:pointer;">&times;</button>
-  </div>
-</div>
-<div id="alert-success" class="alert success" style="display:none;align-items:center;gap:0.5rem;padding:1rem 1.5rem;border-radius:10px;margin-bottom:1rem;">
-  <i class="fas fa-check-circle"></i>
-  <span id="success-message"></span>
-</div>
-<div id="alert-error" class="alert error" style="display:none;align-items:center;gap:0.5rem;padding:1rem 1.5rem;border-radius:10px;margin-bottom:1rem;">
-  <i class="fas fa-exclamation-circle"></i>
-  <span id="error-message"></span>
-</div>
-<script>
-  // Modal logic for delete confirmation
-  document.addEventListener('DOMContentLoaded', function() {
-    // Attach modal close/cancel events
-    document.getElementById('delete-product-cancel').onclick = function() {
-      document.getElementById('delete-product-modal').style.display = 'none';
-    };
-    document.getElementById('delete-product-close').onclick = function() {
-      document.getElementById('delete-product-modal').style.display = 'none';
-    };
-    document.getElementById('delete-product-confirm').onclick = async function() {
-      const productId = getProductIdFromURL();
-      document.getElementById('delete-product-modal').style.display = 'none';
-      try {
-        const resp = await fetch(`${API_URL}/products/bulk_delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numbers: [parseInt(productId)] })
-        });
-        const data = await resp.json();
-        if (data.ok) {
-          window.history.back();
-        } else {
-          showAlert('error', 'Eroare la ștergere: ' + (data.error || ''));
-        }
-      } catch (e) {
-        showAlert('error', 'Eroare la ștergere: ' + e.message);
-      }
-    };
-  });
-
-  function showAlert(type, message) {
-    let alertDiv = document.getElementById('alert-' + type);
-    let msgSpan = document.getElementById(type + '-message');
-    if (!alertDiv) return alert(message);
-    msgSpan.textContent = message;
-    alertDiv.style.display = 'flex';
-    setTimeout(() => { alertDiv.style.display = 'none'; }, type === 'success' ? 2500 : 4000);
-  }
-</script>

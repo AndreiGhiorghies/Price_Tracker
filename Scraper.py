@@ -1,18 +1,16 @@
 import asyncio
-import csv
-from playwright.async_api import async_playwright
-from playwright.async_api import TimeoutError as PWTimeout
-import time
-from Matcher import build_generic_matcher
-import re
 import json
-from urllib.parse import quote_plus
-from Database import *
-import sys
 import os
 
+from playwright.async_api import async_playwright
+from playwright.async_api import TimeoutError as PWTimeout
+from urllib.parse import quote_plus
+
+from Matcher import build_generic_matcher
+from Database import * 
+
 class Filters:
-    def __init__(self, min_price = 0, max_price = 0, min_rating:float = 0, min_ratings = 0) -> None:
+    def __init__(self, min_price = 0, max_price = 0, min_rating:float = 0, min_ratings = 0):
         self.min_price = min_price
         self.max_price = max_price
         self.min_rating = min_rating
@@ -78,10 +76,10 @@ class Scraper:
         db = await aiosqlite.connect(DB_PATH)
 
         jumpSite = dict()
+        products_nr = 0
+
         for site in self.config["sites"]:
             jumpSite[site["name"]] = (site["url"] == "")
-
-        produse_nr = 0  
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, channel="chrome",
@@ -118,18 +116,15 @@ class Scraper:
 
                     q = quote_plus(query.replace("\"", ""))
                     url = site["url_searchTemplate"].format(query=q, page=pgn)
-                    
-                    print(f"[INFO] Accesez {url} ...")
                     await page.goto(url, timeout=60000, wait_until="domcontentloaded")
 
                     try:
-                        await page.wait_for_selector(site["selectors"]["product"], timeout=4000)  # 2s max
+                        await page.wait_for_selector(site["selectors"]["product"], timeout=4000)
                     except PWTimeout:
                         jumpSite[site["name"]] = True
                         continue
 
                     items = await page.query_selector_all(site["selectors"]["product"])
-
                     if not items:
                         jumpSite[site["name"]] = True
                         continue
@@ -141,7 +136,6 @@ class Scraper:
                             continue
 
                     empty = True
-
                     for item in items:
                         if site["selectors"]["remove_items_with"] != "":
                             svg_elem = await item.query_selector(site["selectors"]["remove_items_with"])
@@ -155,33 +149,34 @@ class Scraper:
                         image = await item.query_selector(site["selectors"]["image_link"])
 
                         titlu_text = (await (titlu.inner_text())).strip() if titlu else "N/A"
-                        if link != None:
-                            link_text = await link.get_attribute("href")
-                            if link_text != None and link_text.startswith("/"):
-                                link_text = site["url"] + link_text
-                        else:
-                            link_text = "N/A"
+                        pret_text = (await pret.inner_text()).strip() if pret else "N/A"
+                        valoare_pret, currency = self.parse_price(pret_text)
+                        rating_text = (await rating.inner_text()).strip() if rating else "N/A"
+                        ratingValue, ratingsNumber = self.parse_rating(rating_text)
 
                         if site["selectors"]["id"] != "":
                             id = await item.get_attribute(site["selectors"]["id"])
                         else:
                             id = link_text
                         
-                        pret_text = (await pret.inner_text()).strip() if pret else "N/A"
-                        valoare_pret, currency = self.parse_price(pret_text)
-                        rating_text = (await rating.inner_text()).strip() if rating else "N/A"
+                        if link != None:
+                            link_text = await link.get_attribute("href")
+                            if link_text != None and link_text.startswith("/"):
+                                link_text = site["url"] + link_text
+                        else:
+                            link_text = "N/A"
+                        
                         if image:
                             image_link = await image.get_attribute("src")
                         else:
                             image_link = "N/A"
-                        ratingValue, ratingsNumber = self.parse_rating(rating_text)
-
-                        if titlu_text == "N/A" or not matcher(titlu_text):
-                            continue
-
+                        
                         if site["selectors"]["currency"] != "":
                             temp = await item.query_selector(site["selectors"]["currency"])
                             currency = (await temp.inner_text()).strip() if temp else "N/A"
+
+                        if titlu_text == "N/A" or not matcher(titlu_text):
+                            continue
 
                         empty = False
                         outOfSites = False
@@ -197,18 +192,8 @@ class Scraper:
                         
                         product_id = await upsert_product(db, site["name"], titlu_text, link_text, id, image_link, currency, ratingValue, ratingsNumber, update_time)
                         await upsert_price_history(db, product_id, int(valoare_pret) if valoare_pret else None, update_time)
-
-                        produse_nr += 1
-                        """ produse.append({
-                            "ID": id,
-                            "Titlu": titlu_text,
-                            "Pret": valoare_pret,
-                            "Currency": currency if currency != None else "N/A",
-                            "Rating": ratingValue if ratingValue else "N/A",
-                            "Ratings Number": ratingsNumber if ratingsNumber else "N/A",
-                            "Link": link_text
-                        }) """
-
+                        
+                        products_nr += 1
 
                     if empty:
                         jumpSite[site["name"]] = True
@@ -217,18 +202,10 @@ class Scraper:
 
                 await asyncio.sleep(3)
                 pgn += 1
-
-            print(f"[OK] Am salvat {produse_nr} produse")
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            config_path = script_dir + "\\config.json"
-            try:
-                with open(config_path, "r", encoding="utf-8") as f:
-                    config = json.load(f)
-            except Exception:
-                config = {}
-            config["nr_changed_products"] = str(produse_nr)
-            with open(config_path, "w", encoding="utf-8") as f:
-                json.dump(config, f, indent=2, ensure_ascii=False)
+            
+            self.config["nr_changed_products"] = str(products_nr)
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(self.config, f, indent=2, ensure_ascii=False)
 
             await browser.close()
             await db.close()

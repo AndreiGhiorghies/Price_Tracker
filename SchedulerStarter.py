@@ -3,20 +3,21 @@ import sqlite3
 import subprocess
 import discord
 import asyncio
-from typing import List, Tuple, Union
-from dotenv import load_dotenv
 import os
 import json
 
-def get_products_under_maxprice(db_path="D:\\Python\\Web_Scraper\\tracker.db"):
-    conn = sqlite3.connect(db_path)
+from typing import List, Tuple, Union
+from dotenv import load_dotenv
+from Database import DB_PATH, CONFIG_PATH, SCRIPT_DIR
+
+def get_products_under_maxprice():
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     cur.execute(""" 
-        SELECT p.title, p.last_price, s.max_price
-        FROM products p
-        JOIN scheduler s ON p.id = s.product_id
-        WHERE p.last_price < s.max_price
+        SELECT title, last_price, watch_max_price
+        FROM products
+        WHERE watch_price = 1 AND last_price < watch_max_price
     """)
 
     results = cur.fetchall()
@@ -24,12 +25,14 @@ def get_products_under_maxprice(db_path="D:\\Python\\Web_Scraper\\tracker.db"):
 
     return results
 
-def _build_message(products: List[Tuple[str, float]]) -> str:
+def build_discord_message(products: List[Tuple[str, float]]) -> str:
     if not products:
         return "Nu există produse sub prag."
+    
     lines = ["**Produse sub prag:**"]
     for t, p, *rest in products:
         lines.append(f"- {t} — {p} = {rest[0]}")
+    
     return "\n".join(lines)
 
 def send_discord_alert_dm(products: List[Tuple[str, float]], token: str, user_id: Union[int, str]):
@@ -42,21 +45,20 @@ def send_discord_alert_dm(products: List[Tuple[str, float]], token: str, user_id
         print("user_id invalid — trebuie un int.")
         return
 
-    async def _main():
+    async def main():
         intents = discord.Intents.default()
         intents.guilds = True
         intents.messages = True
         client = discord.Client(intents=intents)
 
-        async def _send_and_close():
+        async def send_and_close():
             try:
-                user = await client.fetch_user(user_id)  # obține obiectul User
+                user = await client.fetch_user(user_id)
                 if user is None:
                     print("User-ul nu a fost găsit.")
                     return
 
-                await user.send(_build_message(products))
-                print("DM trimis cu succes.")
+                await user.send(build_discord_message(products))
             except Exception as e:
                 print("Eroare la trimiterea DM-ului:", e)
 
@@ -67,9 +69,9 @@ def send_discord_alert_dm(products: List[Tuple[str, float]], token: str, user_id
             return
 
         try:
-            ws_task = asyncio.create_task(client.connect())
+            asyncio.create_task(client.connect())
             await client.wait_until_ready()
-            await _send_and_close()
+            await send_and_close()
         except Exception as e:
             print("Conectare/trimite eșuat:", e)
         finally:
@@ -78,13 +80,14 @@ def send_discord_alert_dm(products: List[Tuple[str, float]], token: str, user_id
             except Exception as e:
                 print("Eroare la inchidere client:", e)
 
-    asyncio.run(_main())
+    asyncio.run(main())
 
 if __name__ == "__main__":
-    with open("D:\\Python\\Web_Scraper\\config.json", "r") as f:
+    with open(CONFIG_PATH, "r") as f:
         config = json.load(f)
+    
     python_exe = sys.executable
-    cmd = [f"{python_exe}", "D:\\Python\\Web_Scraper\\Scrape_worker.py", config["schedule_query"], "D:\\Python\\Web_Scraper\\config.json"]
+    cmd = [f"{python_exe}", SCRIPT_DIR + "\\Scrape_worker.py", config["schedule_query"], CONFIG_PATH]
 
     proc = subprocess.Popen(cmd)
     proc.wait()

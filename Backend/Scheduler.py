@@ -9,7 +9,7 @@ def run_cmd(args):
     try:
         cp = subprocess.run(args, capture_output=True, text=True, check=False)
     except FileNotFoundError:
-        raise RuntimeError("'schtasks' nu a fost găsit. Rulează pe Windows.")
+        raise RuntimeError("'schtasks' was not found. Must be run on Windows.")
     
     return cp.returncode, cp.stdout.strip(), cp.stderr.strip()
 
@@ -26,7 +26,7 @@ def create_task(run_time: str,
 ):
 
     if task_exists(task_name):
-        print(f"[warn] Task '{task_name}' există deja.")
+        print(f"[warn] Task '{task_name}' already exists.")
         return False
     
     with open(CONFIG_PATH, "r") as f:
@@ -55,7 +55,7 @@ def create_task(run_time: str,
 
         return True
     else:
-        print(f"[err] Creare task eșuată (code {rc}).")
+        print(f"[err] Task creation failed (code {rc}).")
         if out:
             print("stdout:", out)
         if err:
@@ -73,7 +73,7 @@ def delete_task(task_name: str = "Price_tracker") -> bool:
     if rc == 0:
         return True
     else:
-        print(f"[err] Ștergere task eșuată (code {rc}).")
+        print(f"[err] Task deletion failed (code {rc}).")
         if out:
             print("stdout:", out)
         if err:

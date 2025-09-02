@@ -8,7 +8,6 @@ let currentPage = 1;
 let sitesConfig = [];
 let searchTimeout;
 
-
 let scrapeSettings = {
     min_price: '',
     max_price: '',
@@ -162,17 +161,17 @@ function initializeOnClickListeners() {
             document.getElementById('scrape-settings-modal').style.display = 'none';
 
             if (resp.ok) {
-                showAlert('success', 'Baza de date a fost ștearsă!');
+                showAlert('success', 'Database deleted!');
                 loadProducts();
             } else
-                showAlert('error', 'Eroare la ștergerea bazei de date!');
+                showAlert('error', 'Error deleting database!');
             
             loadProducts()
         } catch (e) {
             hideLoading();
 
             document.getElementById('delete-db-modal').style.display = 'none';
-            showAlert('error', 'Eroare la ștergerea bazei de date!');
+            showAlert('error', 'Error deleting database!');
         }
     };
 
@@ -209,9 +208,9 @@ function initializeOnClickListeners() {
         
         notifyPrice = !notifyPrice;
         if(notifyPrice)
-            btn.innerHTML = `<i class="fas fa-eye"></i> Urmareste pretul`;
+            btn.innerHTML = `<i class="fas fa-eye"></i> Track price`;
         else
-            btn.innerHTML = `<i class="fas fa-eye"></i> Nu mai urmari pretul`;
+            btn.innerHTML = `<i class="fas fa-eye"></i> Untrack price`;
     };
 
     document.getElementById('site-config-btn').onclick = function() {
@@ -259,16 +258,16 @@ function initializeOnClickListeners() {
             const isSingular = count === 1;
 
             if (data.ok) {
-                showAlert('success', `${count} ${isSingular ? 'produs a fost șters cu succes' : 'produse au fost șterse cu succes'}`);
+                showAlert('success', `${count} ${isSingular ? 'product was deleted successfully' : 'produces were deleted successfully'}`);
                 selectedProducts.clear();
                 loadProducts();
             }
             else {
-                showAlert('error', data.error || 'Eroare la ștergere');
+                showAlert('error', data.error || 'Error deleting');
             }
         } 
         catch (error) {
-            showAlert('error', 'Eroare la ștergerea produselor: ' + error.message);
+            showAlert('error', 'Error deleting products: ' + error.message);
         } 
         finally { 
             hideLoading(); 
@@ -300,9 +299,9 @@ function initializeOnSubmitListeners() {
                             { method: 'POST', body: formData });
 
             if (!response.ok)
-                showAlert('error', 'Eroare la salvarea valorilor');
+                showAlert('error', 'Error saving values');
         } catch (error) {
-            showAlert('error', 'Eroare la salvarea datelor');
+            showAlert('error', 'Error saving data');
         }
     };
 
@@ -314,7 +313,7 @@ function initializeOnSubmitListeners() {
         const timeVal = timeInput.value;
 
         if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(timeVal)) {
-            timeError.textContent = 'Ora trebuie să fie în format 24H (ex: 08:30 sau 23:59)';
+            timeError.textContent = 'Time must be in 24H format (e.g. 08:30 or 23:59)';
             timeError.style.display = 'block';
             timeInput.focus();
 
@@ -330,7 +329,7 @@ function initializeOnSubmitListeners() {
             await fetch(`${API_BASE}/add_schedule?query=${query}&time=${time}&discord_id=${discordUserId}`, {method: 'POST'});
 
         document.getElementById('scheduler-modal').style.display = 'none';
-        showAlert('success', 'Scheduler salvat!');
+        showAlert('success', 'Scheduler saved!');
     };
 }
 
@@ -350,7 +349,7 @@ async function initializeScrapeButton() {
     let nr_products = '';
 
     while (!finished) {
-        await new Promise(res => setTimeout(res, 2000));
+        await new Promise(res => setTimeout(res, 3000));
         let statusResp = await fetch(`${API_BASE}/scrape/status`, { method: 'GET' });
         let statusData = await statusResp.json();
 
@@ -361,7 +360,7 @@ async function initializeScrapeButton() {
     }
     scrapingInProgress = false;
 
-    showAlert('success', 'Scraping finalizat! Au fost afectate ' + nr_products + ' produse');
+    showAlert('success', 'Scraping finished! ' + nr_products + ' products affected');
     showLoading();
     loadProducts();
     hideLoading();
@@ -442,7 +441,7 @@ function renderProducts(data) {
     tbody.innerHTML = '';
 
     if (!data.items || data.items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-box-open"></i><div>Nu au fost găsite produse</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fas fa-box-open"></i><div>No products found</div></td></tr>`;
     } else {
         data.items.forEach((p, idx) => {
             tbody.innerHTML += `<tr>
@@ -546,7 +545,7 @@ function updateBulkActions() {
     bulkDeleteBtn.disabled = selectedProducts.size === 0;
 
     if(!notifyPrice)
-        bulkTrackBtn.innerHTML = `<i class="fas fa-eye"></i> Urmareste pretul`;
+        bulkTrackBtn.innerHTML = `<i class="fas fa-eye"></i> Track price`;
     notifyPrice = true;
 
     if (selectedProducts.size > 0) {
@@ -574,11 +573,11 @@ async function handleTrackSelected() {
 
         let data = await resp.json();
         if (data.ok)
-            showAlert('success', `${selected_ids.length} produse au fost adăugate la urmărire!`);
+            showAlert('success', `${selected_ids.length} products have been added to tracking!`);
         else
-            showAlert('error', data.error || 'Eroare la urmărire');
+            showAlert('error', data.error || 'Error tracking');
     } catch (error) {
-        showAlert('error', 'Eroare la urmărire: ' + error.message);
+        showAlert('error', 'Error tracking: ' + error.message);
     } finally {
         hideLoading();
     }
@@ -606,9 +605,9 @@ async function handleBulkDelete(event) {
     const count = selectedProducts.size;
     const isSingular = count === 1;
 
-    document.getElementById('bulk-delete-modal-title').textContent = isSingular ? 'Ștergere produs selectat' : 'Ștergere produse selectate';
+    document.getElementById('bulk-delete-modal-title').textContent = isSingular ? 'Delete selected product' : 'Delete selected products';
     document.getElementById('bulk-delete-modal-msg').innerHTML =
-        `Sigur vrei să ștergi <b>${count} ${isSingular ? 'produs' : 'produse'}</b> selectat${isSingular ? '' : 'e'}?<br><b>Această acțiune este ireversibilă!</b>`;
+        `Are you sure you want to delete <b>${count} ${isSingular ? 'product' : 'products'}</b> selected?<br><b>This action is irreversible!</b>`;
     document.getElementById('bulk-delete-modal').style.display = 'block';
 }
 
@@ -628,7 +627,7 @@ async function exportData(format) {
             window.location.href = resp.url;
         }
     } catch (error) {
-        showAlert('error', 'Eroare la export: ' + error.message);
+        showAlert('error', 'Error exporting: ' + error.message);
     } finally {
         hideLoading();
     }
@@ -762,7 +761,7 @@ async function handleScrape(event) {
     const query = formData.get('query');
     
     if (!query || !query.trim()) {
-        showAlert('error', 'Te rog introdu un termen de căutare');
+        showAlert('error', 'Please enter a search term');
         return;
     }
     
@@ -776,7 +775,7 @@ async function handleScrape(event) {
             const alertElement = document.getElementById(`alert-success`);
             const messageElement = document.getElementById(`success-message`);
             
-            messageElement.textContent = 'Scraping in progres cu query =  ' + query;
+            messageElement.textContent = 'Scraping in progress with query =  ' + query;
             alertElement.style.display = 'flex';
 
             const scrapeBtn = document.querySelector('#scrape-form button[type="submit"]');
@@ -791,7 +790,7 @@ async function handleScrape(event) {
             let nr_products = '';
 
             while (!finished) {
-                await new Promise(res => setTimeout(res, 2000));
+                await new Promise(res => setTimeout(res, 3000));
                 let statusResp = await fetch(`${API_BASE}/scrape/status`, { method: 'GET' });
                 let statusData = await statusResp.json();
 
@@ -802,7 +801,7 @@ async function handleScrape(event) {
             }
             scrapingInProgress = false;
 
-            showAlert('success', 'Scraping finalizat! Au fost afectate ' + nr_products + ' produse');
+            showAlert('success', 'Scraping finished! ' + nr_products + ' products affected');
             showLoading();
             loadProducts();
             hideLoading();
@@ -812,10 +811,10 @@ async function handleScrape(event) {
             scrapeBtn.classList.add('btn-primary');
             document.getElementById('scrape-query').value = "";
         } else
-            throw new Error('Eroare la pornirea scraping-ului');
+            throw new Error('Error starting scraping');
     } catch (error) {
         console.error('Scrape error:', error);
-        showAlert('error', 'Eroare la pornirea scraping-ului: ' + error.message);
+        showAlert('error', 'Error starting scraping: ' + error.message);
     }
 }
 
@@ -986,16 +985,16 @@ async function renderSiteList() {
     addBtn.type = 'button';
     addBtn.className = 'btn btn-primary';
     addBtn.style = 'margin-bottom:0.5rem; margin-right:0.5rem; display:flex; align-items:center; gap:0.3rem;';
-    addBtn.innerHTML = '<i class="fas fa-plus"></i> Adaugă site';
+    addBtn.innerHTML = '<i class="fas fa-plus"></i> Add site';
 
     addBtn.onclick = async function() {
-        const baseName = 'Nume nou site';
+        const baseName = 'New site';
         const usedNumbers = new Set();
         sitesConfig.forEach(site => {
             if (site.name === baseName) {
                 usedNumbers.add(0);
             } else {
-                const match = site.name.match(/^Nume nou site \((\d+)\)$/);
+                const match = site.name.match(/^New site \((\d+)\)$/);
                 if (match) {
                     usedNumbers.add(parseInt(match[1], 10));
                 }
@@ -1058,7 +1057,7 @@ async function renderSiteProperties(siteIdx) {
 
     form.innerHTML = `
         <label style="display:flex;align-items:center;gap:0.7em;">
-            Nume site:
+            Site name:
             <span id="site-name-error" style="color:#ef4444;font-size:1em;font-weight:500;display:none;margin-left:0.5em;"></span>
         </label>
         <input type="text" name="site_name" id="site-name-input" class="form-input" value="${site.name}" style="width:100%;margin-bottom:1rem;">
@@ -1080,7 +1079,7 @@ async function renderSiteProperties(siteIdx) {
         const errorSpan = document.getElementById('site-name-error');
         const newName = nameInput.value.trim();
 
-        const baseName = 'Nume nou site';
+        const baseName = 'New site';
         const usedNumbers = new Set();
         sitesConfig.forEach((s, idx2) => {
             if (idx2 !== siteIdx) {
@@ -1088,7 +1087,7 @@ async function renderSiteProperties(siteIdx) {
                     
                     usedNumbers.add(0);
                 } else if (s.name.startsWith(baseName + " (")) {
-                    const match = s.name.match(/^Nume nou site \((\d+)\)$/);
+                    const match = s.name.match(/^New site \((\d+)\)$/);
                     if (match) {
                         usedNumbers.add(parseInt(match[1], 10));
                     }
@@ -1102,7 +1101,7 @@ async function renderSiteProperties(siteIdx) {
 
         const duplicate = sitesConfig.some((s, idx2) => idx2 !== siteIdx && s.name.trim().toLowerCase() === newName.toLowerCase());
         if (!newName) {
-            errorSpan.textContent = 'Numele site-ului nu poate fi gol!';
+            errorSpan.textContent = 'Site name cannot be empty!';
             errorSpan.style.display = 'inline';
             nameInput.style.border = '2px solid #ef4444';
             nameInput.style.boxShadow = '0 0 0 2px #ef444433';
@@ -1112,7 +1111,7 @@ async function renderSiteProperties(siteIdx) {
             return;
         }
         if (duplicate) {
-            errorSpan.textContent = 'Există deja un site cu acest nume!';
+            errorSpan.textContent = 'A site with this name already exists!';
             errorSpan.style.display = 'inline';
             nameInput.style.border = '2px solid #ef4444';
             nameInput.style.boxShadow = '0 0 0 2px #ef444433';
@@ -1123,7 +1122,7 @@ async function renderSiteProperties(siteIdx) {
         }
 
         if (site.name.startsWith(baseName + " (")) {
-            const match = site.name.match(/^Nume nou site \((\d+)\)$/);
+            const match = site.name.match(/^New site \((\d+)\)$/);
             if (match)
                 usedNumbers.delete(parseInt(match[1], 10));
         } else if (site.name === baseName)
@@ -1158,13 +1157,13 @@ async function renderSiteProperties(siteIdx) {
         deleteBtn.style.display = 'none';
         window._selectedSiteIdx = null;
 
-        showAlert('success', `Configurația pentru ${site.name} a fost salvată!`);
+        showAlert('success', `Configuration for ${site.name} saved!`);
         renderSiteList();
     };
 
     deleteBtn.onclick = function() {
         document.getElementById('delete-site-modal-msg').innerHTML =
-            `Sigur vrei să ștergi site-ul <b>${site.name}</b>?<br><b>Această acțiune este ireversibilă!</b>`;
+            `Are you sure you want to delete the site <b>${site.name}</b>?<br><b>This action is irreversible!</b>`;
         document.getElementById('delete-site-modal').style.display = 'block';
 
         document.getElementById('delete-site-confirm').onclick = async function() {
@@ -1178,7 +1177,7 @@ async function renderSiteProperties(siteIdx) {
             deleteBtn.style.display = 'none';
             document.getElementById('delete-site-modal').style.display = 'none';
 
-            showAlert('success', `Site-ul "${site.name}" a fost șters!`);
+            showAlert('success', `Site "${site.name}" deleted!`);
         };
 
         document.getElementById('delete-site-cancel').onclick = function() {

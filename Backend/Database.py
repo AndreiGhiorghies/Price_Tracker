@@ -4,10 +4,11 @@ import os
 from typing import Optional
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = SCRIPT_DIR + "\\tracker.db"
-CONFIG_PATH = SCRIPT_DIR + "\\config.json"
+DB_PATH = SCRIPT_DIR + "\\../\\Data\\tracker.db"
+CONFIG_PATH = SCRIPT_DIR + "\\../\\Data\\config.json"
 NOW_SQL = "strftime('%Y-%m-%d %H:%M:%f','now','localtime')"
 database_initialized = False
+print(DB_PATH)
 
 async def init_db(path: str = DB_PATH) -> None:
     async with aiosqlite.connect(path) as db:
@@ -22,7 +23,6 @@ async def init_db(path: str = DB_PATH) -> None:
           currency TEXT,
           rating REAL,
           ratings_count INTEGER,
-          -- nou: last_price (poate fi NULL)
           last_price INTEGER,
           first_seen_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f','now','localtime')),
           last_seen_at  DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f','now','localtime')),

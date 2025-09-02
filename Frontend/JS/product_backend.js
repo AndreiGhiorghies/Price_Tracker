@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const price = document.getElementById('notify-price').value;
         if (!price || isNaN(price) || price <= 0) {
-            showAlert('error', 'Introdu un preț maxim valid!');
+            showAlert('error', 'Enter a valid maximum price!');
             return;
         }
 
@@ -31,12 +31,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (data.ok) {
                 notifyPrice = parseInt(price);
-                showAlert('success', 'Notificarea a fost salvată!');
+                showAlert('success', 'Notification saved!');
                 closeSchedulerModal();
             } else
-                showAlert('error', data.error || 'Eroare la salvare');
+                showAlert('error', data.error || 'Error saving');
         } catch (e) {
-        showAlert('error', 'Eroare la salvare: ' + e.message);
+            showAlert('error', 'Error saving: ' + e.message);
         }
     };
 
@@ -63,23 +63,23 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.ok)
                 window.history.back();
             else
-                showAlert('error', 'Eroare la ștergere: ' + (data.error || ''));
+                showAlert('error', 'Error deleting: ' + (data.error || ''));
         } catch (e) {
-        showAlert('error', 'Eroare la ștergere: ' + e.message);
-      }
+            showAlert('error', 'Error deleting: ' + e.message);
+        }
     };
 });
 
 (async function () {
     const productId = getProductIdFromURL();
     if (!productId) {
-        document.body.innerHTML = '<div style="padding:2em;text-align:center;">Product ID lipsă în URL</div>';
+        document.body.innerHTML = '<div style="padding:2em;text-align:center;">Product ID missing in URL</div>';
         return;
     }
 
     const product = await fetchProduct(productId);
     if (!product) {
-        document.body.innerHTML = '<div style="padding:2em;text-align:center;">Produsul nu a fost găsit</div>';
+        document.body.innerHTML = '<div style="padding:2em;text-align:center;">Product not found</div>';
         return;
     }
 
@@ -140,22 +140,22 @@ async function renderProduct(product, imageUrl) {
     const card = document.getElementById('product-card');
 
     card.innerHTML = `
-        <img src=${imageUrl} alt="Imagine produs" class="product-image">
+        <img src=${imageUrl} alt="Product image" class="product-image">
         <div class="card-title">${product.title}</div>
         <div class="product-details-list">
           <p><strong>Site:</strong> <span class="site-badge">${product.site_name}</span></p>
-          <p><strong>Preţ curent:</strong> <span class="price">${product.currency || ''} ${product.last_price !== null ? product.last_price : '-'}</span></p>
+          <p><strong>Current price:</strong> <span class="price">${product.currency || ''} ${product.last_price !== null ? product.last_price : '-'}</span></p>
           <p class="rating"><strong>Rating:</strong> ${renderStars(product.rating)} <span>${product.rating !== null ? product.rating : '-'}</span> ${product.ratings_count ? `<span class="text-muted">(${product.ratings_count})</span>` : ''}</p>
         </div>
         <a href="${product.link}" target="_blank" class="open-link-btn">
-          <i class="fas fa-external-link-alt"></i> Deschide produsul
+          <i class="fas fa-external-link-alt"></i> Open product
         </a>
         <button id="delete-product-btn" style="margin-top:1.2em;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:50px;padding:0.7em 1.5em;font-weight:600;font-size:1.05em;cursor:pointer;box-shadow:0 2px 8px rgba(239,68,68,0.08);display:flex;align-items:center;gap:0.7em;">
-          <i class="fas fa-trash"></i> Șterge produsul
+          <i class="fas fa-trash"></i> Delete product
         </button>
         <div style="display:flex;gap:1em;justify-content:center;margin-top:0.7em;">
           <!-- Scheduler settings button -->
-          <button id="scheduler-settings-btn" title="Setează notificare preț" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:white;border:1.5px solid var(--primary);border-radius:8px;box-shadow:var(--shadow);cursor:pointer;padding:0;" onclick="openSchedulerModal()">
+          <button id="scheduler-settings-btn" title="Set price notification" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:white;border:1.5px solid var(--primary);border-radius:8px;box-shadow:var(--shadow);cursor:pointer;padding:0;" onclick="openSchedulerModal()">
             <i class="fas fa-clock" style="font-size:1.5rem;color:var(--primary);"></i>
           </button>
           <!-- Toggle tracking button -->
@@ -232,7 +232,7 @@ function updateHistoryView() {
 function renderHistoryTable(history) {
     if (!history.length) {
         document.getElementById('history-table-container').innerHTML =
-            '<div class="p-3 text-muted" style="text-align:center;">Niciun istoric</div>';
+            '<div class="p-3 text-muted" style="text-align:center;">No history</div>';
         return;
     }
 
@@ -282,8 +282,8 @@ function renderHistoryTable(history) {
           <thead style="width=100%">
             <tr>
               <th style="width:2.5em;text-align:center;">#</th>
-              <th>Data</th>
-              <th style="text-align:center;">Preţ</th>
+              <th>Date</th>
+              <th style="text-align:center;">Price</th>
               <th style="text-align:center;">Δ %</th>
             </tr>
           </thead>
@@ -336,7 +336,7 @@ function renderPriceChart(history) {
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Preț',
+                    label: 'Price',
                     data: [],
                     borderColor: '#6366f1',
                     backgroundColor: 'rgba(99,102,241,0.08)',
@@ -367,7 +367,7 @@ function renderPriceChart(history) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Preț',
+                label: 'Price',
                 data: data,
                 borderColor: '#6366f1',
                 backgroundColor: 'rgba(99,102,241,0.08)',
@@ -385,7 +385,7 @@ function renderPriceChart(history) {
                 tooltip: {
                     callbacks: {
                         label: function (context) {
-                            return 'Preț: ' + context.parsed.y;
+                            return 'Price: ' + context.parsed.y;
                         }
                     }
                 }
@@ -416,11 +416,11 @@ function renderPriceChart(history) {
 
 function updateTrackIcon() {
     if (isTracked) {
-      document.getElementById('track-toggle-btn').title = 'Nu mai urmări produsul';
+      document.getElementById('track-toggle-btn').title = 'Untrack product';
       document.getElementById('track-toggle-btn').style.border = '1.5px solid var(--success)';
       document.getElementById('track-toggle-btn').innerHTML = `<i id="track-toggle-icon" class="fas fa-eye" style="font-size:1.5rem;color:var(--success);"></i>`;
     } else {
-      document.getElementById('track-toggle-btn').title = 'Urmărește produsul';
+      document.getElementById('track-toggle-btn').title = 'Track product';
       document.getElementById('track-toggle-btn').style.border = '1.5px solid var(--danger)';
       document.getElementById('track-toggle-btn').innerHTML = `<i id="track-toggle-icon" class="fas fa-eye-slash" style="font-size:1.5rem;color:var(--danger);"></i>`;
     }
@@ -452,9 +452,9 @@ async function HandleTrackButtonClick() {
         
         isTracked = !isTracked;
         updateTrackIcon();
-        showAlert('success', isTracked ? 'Produsul este urmărit.' : 'Produsul nu mai este urmărit.');
+        showAlert('success', isTracked ? 'Product is being tracked.' : 'Product is no longer tracked.');
     } catch (e) {
-        showAlert('error', 'Eroare la actualizare: ' + e.message);
+        showAlert('error', 'Error updating: ' + e.message);
     }
 }
 

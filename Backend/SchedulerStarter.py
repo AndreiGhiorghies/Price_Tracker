@@ -27,11 +27,11 @@ def get_products_under_maxprice():
 
 def build_discord_message(products: List[Tuple[str, float]]) -> str:
     if not products:
-        return "Nu există produse sub prag."
+        return "There are no products below the threshold."
     
-    lines = ["**Produse sub prag:**"]
+    lines = ["**Products below threshold:**"]
     for t, p, *rest in products:
-        lines.append(f"- {t} — {p} = {rest[0]}")
+        lines.append(f"- {t} — {p} < {rest[0]}")
     
     return "\n".join(lines)
 
@@ -42,7 +42,7 @@ def send_discord_alert_dm(products: List[Tuple[str, float]], token: str, user_id
     try:
         user_id = int(user_id)
     except Exception:
-        print("user_id invalid — trebuie un int.")
+        print("Invalid user_id — must be an int.")
         return
 
     async def main():
@@ -55,17 +55,17 @@ def send_discord_alert_dm(products: List[Tuple[str, float]], token: str, user_id
             try:
                 user = await client.fetch_user(user_id)
                 if user is None:
-                    print("User-ul nu a fost găsit.")
+                    print("User not found.")
                     return
 
                 await user.send(build_discord_message(products))
             except Exception as e:
-                print("Eroare la trimiterea DM-ului:", e)
+                print("Error sending DM:", e)
 
         try:
             await client.login(token)
         except Exception as e:
-            print("Login eșuat:", e)
+            print("Login failed:", e)
             return
 
         try:
@@ -73,12 +73,12 @@ def send_discord_alert_dm(products: List[Tuple[str, float]], token: str, user_id
             await client.wait_until_ready()
             await send_and_close()
         except Exception as e:
-            print("Conectare/trimite eșuat:", e)
+            print("Connect/send failed:", e)
         finally:
             try:
                 await client.close()
             except Exception as e:
-                print("Eroare la inchidere client:", e)
+                print("Error closing client:", e)
 
     asyncio.run(main())
 

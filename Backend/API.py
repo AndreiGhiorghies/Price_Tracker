@@ -83,13 +83,13 @@ def row_to_price(row) -> PricePoint:
 
 @APP.get("/products", response_model=ProductsList)
 async def list_products(
-    q: Optional[str] = Query(None, description="filtru text pe titlu"),
-    site: Optional[str] = Query(None, description="filtru dupa site_name"),
-    min_price: Optional[int] = Query(None, description="pret minim in minor units (bani)"),
-    max_price: Optional[int] = Query(None, description="pret maxim in minor units (bani)"),
+    q: Optional[str] = Query(None, description="text filter on title"),
+    site: Optional[str] = Query(None, description="filter by site_name"),
+    min_price: Optional[int] = Query(None, description="minimum price in minor units (cents)"),
+    max_price: Optional[int] = Query(None, description="maximum price in minor units (cents)"),
     page: int = Query(1),
     per_page: int = Query(25),
-    order_by: Optional[str] = Query(None, description="ordoneaza produsele dupa un criteriu"),
+    order_by: Optional[str] = Query(None, description="order products by a criterion"),
     reversed: bool = Query(0, le=1, ge=0),
     db: aiosqlite.Connection = Depends(get_db)
 ):
@@ -175,7 +175,7 @@ async def get_price_history(
     return [row_to_price(r) for r in rows]
 
 @APP.post("/scrape/trigger")
-async def trigger_scrape(query: Optional[str] = Query(None, description="Introduci query-ul: ")):
+async def trigger_scrape(query: Optional[str] = Query(None, description="Enter the query: ")):
     cmd = ["python", "scrape_worker.py",
             query or "",
             CONFIG_PATH]
@@ -275,7 +275,7 @@ async def get_config():
             "min_ratings": str(config["configuration"]["min_ratings"]) }
 
 @APP.get("/get_site_settings")
-async def get_site_settings(index: Optional[str] = Query(None, description="Indexul site-ului")):
+async def get_site_settings(index: Optional[str] = Query(None, description="Site index")):
     idx = int(index if index is not None else "0")
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -301,20 +301,20 @@ async def get_site_settings(index: Optional[str] = Query(None, description="Inde
 
 @APP.post("/set_site_settings")
 async def set_site_settings(
-    index: Optional[str] = Query(None, description="Indexul site-ului"),
-    name: Optional[str] = Query(None, description="Numele site-ului"),
-    url: Optional[str] = Query(None, description="URL-ul site-ului"),
-    url_searchTemplate: Optional[str] = Query(None, description="URL_searchTemplate-ul site-ului"),
-    product: Optional[str] = Query(None, description="Casuta produs"),
-    title: Optional[str] = Query(None, description="Titlul produsului"),
-    link: Optional[str] = Query(None, description="Linkul produsului"),
-    price: Optional[str] = Query(None, description="Pretul produsului"),
-    currency: Optional[str] = Query(None, description="Currency-ul produsului"),
-    rating: Optional[str] = Query(None, description="Ratingul produsului"),
-    id: Optional[str] = Query(None, description="ID-ul produsului"),
-    image_link: Optional[str] = Query(None, description="Image_link-ul produsului"),
-    remove_items_with: Optional[str] = Query(None, description="Ignora produsul"),
-    end_of_pages: Optional[str] = Query(None, description="Sfarsitul paginilor cu produse"),
+    index: Optional[str] = Query(None, description="Site index"),
+    name: Optional[str] = Query(None, description="Site name"),
+    url: Optional[str] = Query(None, description="Site URL"),
+    url_searchTemplate: Optional[str] = Query(None, description="Site search template URL"),
+    product: Optional[str] = Query(None, description="Product selector"),
+    title: Optional[str] = Query(None, description="Product title selector"),
+    link: Optional[str] = Query(None, description="Product link selector"),
+    price: Optional[str] = Query(None, description="Product price selector"),
+    currency: Optional[str] = Query(None, description="Product currency selector"),
+    rating: Optional[str] = Query(None, description="Product rating selector"),
+    id: Optional[str] = Query(None, description="Product ID selector"),
+    image_link: Optional[str] = Query(None, description="Product image link selector"),
+    remove_items_with: Optional[str] = Query(None, description="Ignore product selector"),
+    end_of_pages: Optional[str] = Query(None, description="End of product pages selector"),
 ):
     
     idx = int(index if index is not None else "0")
@@ -371,7 +371,7 @@ async def get_site_number():
     return {"nr_sites": len(config["sites"])}
 
 @APP.post("/delete_site")
-async def delete_site(index: Optional[str] = Query(None, description="Indexul site-ului care trebuie sters")):
+async def delete_site(index: Optional[str] = Query(None, description="Index of the site to delete")):
     try:
         if index:
             idx = int(index)
@@ -396,7 +396,7 @@ async def delete_site(index: Optional[str] = Query(None, description="Indexul si
 
 @APP.get("/product_image")
 async def get_product_image(
-    product_id: Optional[str] = Query(0, description="Id produsului"), 
+    product_id: Optional[str] = Query(0, description="Product id"), 
     db: aiosqlite.Connection = Depends(get_db)
 ):
     async with db.execute("""SELECT image_link FROM products WHERE id = ?""", (str(product_id),)) as cur:
@@ -406,8 +406,8 @@ async def get_product_image(
 
 @APP.get("/export_csv")
 async def export_csv(
-    q: Optional[str] = Query(None, description="Queri-ul de la search"),
-    site: Optional[str] = Query(None, description="Site-ul de la filtre"),
+    q: Optional[str] = Query(None, description="Search query"),
+    site: Optional[str] = Query(None, description="Site filter"),
     db: aiosqlite.Connection = Depends(get_db)
 ):
     import io
@@ -429,8 +429,8 @@ async def export_csv(
 
 @APP.get("/export_pdf")
 async def export_pdf(
-    q: Optional[str] = Query(None, description="Queri-ul de la search"),
-    site: Optional[str] = Query(None, description="Site-ul de la filtre"),
+    q: Optional[str] = Query(None, description="Search query"),
+    site: Optional[str] = Query(None, description="Site filter"),
     db: aiosqlite.Connection = Depends(get_db)
 ):
     import tempfile
@@ -483,8 +483,8 @@ async def export_pdf(
     return FileResponse(pdf_path, media_type="application/pdf", filename="products.pdf")
 
 @APP.get("/export_xlsx")
-async def export_xlsx(q: Optional[str] = Query(None, description="Queri-ul de la search"),
-    site: Optional[str] = Query(None, description="Site-ul de la filtre"),
+async def export_xlsx(q: Optional[str] = Query(None, description="Search query"),
+    site: Optional[str] = Query(None, description="Site filter"),
     db: aiosqlite.Connection = Depends(get_db)
 ):
     import tempfile
@@ -561,7 +561,7 @@ async def add_watch_products(
 ):
     q_marks = ','.join(['?'] * len(ids.numbers))
     if max_price is not None:
-        await db.execute(f"UPDATE products SET watch_price = 1 watch_max_price = {max_price} WHERE id IN ({q_marks})", ids.numbers)
+        await db.execute(f"UPDATE products SET watch_price = 1, watch_max_price = {max_price} WHERE id IN ({q_marks})", ids.numbers)
     else:
         await db.execute(f"UPDATE products SET watch_price = 1 WHERE id IN ({q_marks})", ids.numbers)
 

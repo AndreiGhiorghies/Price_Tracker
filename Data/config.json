@@ -1,23 +1,4 @@
 {
-  "save": [
-    {
-      "name": "Amazon",
-      "url": "https://www.amazon.com",
-      "url_searchTemplate": "https://www.amazon.com/s?k={query}&page={page}",
-      "selectors": {
-        "product": "div.puis-card-container.s-card-container.s-overflow-hidden",
-        "title": "h2.a-size-medium.a-spacing-none.a-color-base.a-text-normal",
-        "link": "a.a-link-normal.s-line-clamp-2.s-link-style.a-text-normal",
-        "price": "span.a-price-whole", 
-        "currency": "",
-        "rating": "None",
-        "id": "",
-        "image_link": "",
-        "remove_items_with": "",
-        "end_of_pages": ""
-      }
-    }
-  ],
   "sites": [
     {
       "name": "eMAG",
@@ -56,10 +37,13 @@
   ],
   "configuration": {
     "max_price": "0",
-    "min_price": "1000",
+    "min_price": "0",
     "min_rating": "0",
     "min_ratings": "0",
     "min_hours_update": "0"
   },
-  "nr_changed_products": "10"
+  "nr_changed_products": "16",
+  "schedule_time": "14:03",
+  "schedule_query": "",
+  "discord_user_id": "721389952105185310"
 }

@@ -9,4 +9,4 @@ scrap = Scraper(CONFIG_PATH)
 
 filter = Filters()
 
-scrap.Run('Telefon samsung a55', filter, 0)
+scrap.Run('Telefon samsung a55', filter, 0) 

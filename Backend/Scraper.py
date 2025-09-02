@@ -1,15 +1,16 @@
 import asyncio
-import csv
+import json
+import os
+
 from playwright.async_api import async_playwright
 from playwright.async_api import TimeoutError as PWTimeout
-import time
-from Matcher import build_generic_matcher
-import re
-import json
 from urllib.parse import quote_plus
 
+from Matcher import build_generic_matcher
+from Database import * 
+
 class Filters:
-    def __init__(self, min_price = -1, max_price = -1, min_rating = -1, min_ratings = -1) -> None:
+    def __init__(self, min_price = 0, max_price = 0, min_rating:float = 0, min_ratings = 0):
         self.min_price = min_price
         self.max_price = max_price
         self.min_rating = min_rating
@@ -69,10 +70,16 @@ class Scraper:
 
         return value, nr
 
-    async def RunScrap(self, query, filter: Filters, csv_file):
+    async def RunScrap(self, query, filter: Filters, update_time: float = 0.0):
+        if not database_initialized:
+            await init_db()
+        db = await aiosqlite.connect(DB_PATH)
+
         jumpSite = dict()
+        products_nr = 0
+
         for site in self.config["sites"]:
-            jumpSite[site["name"]] = False
+            jumpSite[site["name"]] = (site["url"] == "")
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, channel="chrome",
@@ -84,7 +91,6 @@ class Scraper:
             ])
 
             pgn = 1
-            produse = []
             matcher = build_generic_matcher(query)
             outOfSites = False
 
@@ -96,11 +102,11 @@ class Scraper:
 
                     context = await browser.new_context(
                         user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-                        locale="ro-RO"
+                        locale="en-US"
                     )
 
                     await context.set_extra_http_headers({
-                        "Accept-Language": "ro-RO,ro;q=0.9,en-US;q=0.8,en;q=0.7",
+                        "Accept-Language": "en-US;q=0.8,en;q=0.7",
                         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                         "Connection": "keep-alive",
                         "Referer": site["url"],
@@ -110,18 +116,15 @@ class Scraper:
 
                     q = quote_plus(query.replace("\"", ""))
                     url = site["url_searchTemplate"].format(query=q, page=pgn)
-                    
-                    print(f"[INFO] Accesez {url} ...")
                     await page.goto(url, timeout=60000, wait_until="domcontentloaded")
 
                     try:
-                        await page.wait_for_selector(site["selectors"]["product"], timeout=4000)  # 2s max
+                        await page.wait_for_selector(site["selectors"]["product"], timeout=4000)
                     except PWTimeout:
                         jumpSite[site["name"]] = True
                         continue
 
                     items = await page.query_selector_all(site["selectors"]["product"])
-
                     if not items:
                         jumpSite[site["name"]] = True
                         continue
@@ -133,80 +136,79 @@ class Scraper:
                             continue
 
                     empty = True
-
                     for item in items:
                         if site["selectors"]["remove_items_with"] != "":
                             svg_elem = await item.query_selector(site["selectors"]["remove_items_with"])
                             if svg_elem:
                                 continue
                             
-                        titlu = await item.query_selector(site["selectors"]["title"])
-                        pret = await item.query_selector(site["selectors"]["price"])
+                        title = await item.query_selector(site["selectors"]["title"])
+                        price = await item.query_selector(site["selectors"]["price"])
                         rating = await item.query_selector(site["selectors"]["rating"])
                         link = await item.query_selector(site["selectors"]["link"])
+                        image = await item.query_selector(site["selectors"]["image_link"])
 
-                        titlu_text = (await (titlu.inner_text())).strip() if titlu else "N/A"
+                        title_text = (await (title.inner_text())).strip() if title else "N/A"
+                        price_text = (await price.inner_text()).strip() if price else "N/A"
+                        price_value, currency = self.parse_price(price_text)
+                        rating_text = (await rating.inner_text()).strip() if rating else "N/A"
+                        ratingValue, ratingsNumber = self.parse_rating(rating_text)
+
                         if link != None:
                             link_text = await link.get_attribute("href")
                             if link_text != None and link_text.startswith("/"):
                                 link_text = site["url"] + link_text
                         else:
                             link_text = "N/A"
-
+                        
                         if site["selectors"]["id"] != "":
                             id = await item.get_attribute(site["selectors"]["id"])
                         else:
                             id = link_text
                         
-                        pret_text = (await pret.inner_text()).strip() if pret else "N/A"
-                        valoare_pret, currency = self.parse_price(pret_text)
-                        rating_text = (await rating.inner_text()).strip() if rating else "N/A"
-                        ratingValue, ratingsNumber = self.parse_rating(rating_text)
-
-                        if titlu_text == "N/A" or not matcher(titlu_text):
-                            continue
-
+                        if image:
+                            image_link = await image.get_attribute("src")
+                        else:
+                            image_link = "N/A"
+                        
                         if site["selectors"]["currency"] != "":
                             temp = await item.query_selector(site["selectors"]["currency"])
                             currency = (await temp.inner_text()).strip() if temp else "N/A"
 
+                        if title_text == "N/A" or not matcher(title_text):
+                            continue
+
                         empty = False
                         outOfSites = False
 
-                        if filter.min_price != -1 and (valoare_pret is None or valoare_pret < filter.min_price):
+                        if filter.min_price != 0 and (price_value is None or price_value < filter.min_price):
                             continue
-                        if filter.max_price != -1 and (valoare_pret is None or valoare_pret > filter.max_price):
+                        if filter.max_price != 0 and (price_value is None or price_value > filter.max_price):
                             continue
-                        if filter.min_rating != -1 and (ratingValue is None or ratingValue < filter.min_rating):
+                        if filter.min_rating != 0 and (ratingValue is None or ratingValue < filter.min_rating):
                             continue
-                        if filter.min_ratings != -1 and (ratingsNumber is None or ratingsNumber < filter.min_ratings):
+                        if filter.min_ratings != 0 and (ratingsNumber is None or ratingsNumber < filter.min_ratings):
                             continue
-
-                        produse.append({
-                            "ID": id,
-                            "Titlu": titlu_text,
-                            "Pret": valoare_pret,
-                            "Currency": currency if currency != None else "N/A",
-                            "Rating": ratingValue if ratingValue else "N/A",
-                            "Ratings Number": ratingsNumber if ratingsNumber else "N/A",
-                            "Link": link_text
-                        })
+                        
+                        product_id = await upsert_product(db, site["name"], title_text, link_text, id, image_link, currency, ratingValue, ratingsNumber, update_time)
+                        await upsert_price_history(db, product_id, int(price_value) if price_value else None, update_time)
+                        
+                        products_nr += 1
 
                     if empty:
                         jumpSite[site["name"]] = True
 
                     await page.close()
 
-                time.sleep(3)
+                await asyncio.sleep(3)
                 pgn += 1
+            
+            self.config["nr_changed_products"] = str(products_nr)
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(self.config, f, indent=2, ensure_ascii=False)
 
-            with open(csv_file, mode="w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=["ID", "Titlu", "Pret", "Currency", "Rating", "Ratings Number", "Link"])
-                writer.writeheader()
-                writer.writerows(produse)
-
-            print(f"[OK] Am salvat {len(produse)} produse în {csv_file}")
             await browser.close()
+            await db.close()
     
-    def Run(self, query, filter:Filters, csv_file):
-        asyncio.run(self.RunScrap(query, filter, csv_file))
+    def Run(self, query, filter:Filters, min_hours_update: float) -> None:
+        asyncio.run(self.RunScrap(query, filter, min_hours_update))

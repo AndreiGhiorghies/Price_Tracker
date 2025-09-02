@@ -3,4 +3,4 @@
 __pycache__/
 Git_Ignore/
 .env
-tracker.db
+tracker.db 

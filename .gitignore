@@ -1,6 +1,6 @@
 .vs/
 .vscode/
-.__pycache__/
-.Git_Ignore/
+__pycache__/
+Git_Ignore/
 .env
 tracker.db

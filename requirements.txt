@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+flask
+aiosqlite
+pydantic
+playwright
+discord.py
+python-dotenv

@@ -8,7 +8,6 @@ DB_PATH = SCRIPT_DIR + "\\../\\Data\\tracker.db"
 CONFIG_PATH = SCRIPT_DIR + "\\../\\Data\\config.json"
 NOW_SQL = "strftime('%Y-%m-%d %H:%M:%f','now','localtime')"
 database_initialized = False
-print(DB_PATH)
 
 async def init_db(path: str = DB_PATH) -> None:
     async with aiosqlite.connect(path) as db:
